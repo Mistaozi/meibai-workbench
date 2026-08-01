@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff7eb3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="美白工作台" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>🐰 我的美白工作台</title>
+  <style>
+/* ===== 粉色可爱配色 ===== */
+:root {
+  --pink: #ff7eb3;
+  --pink-deep: #ff5fa2;
+  --pink-soft: #ffd9ec;
+  --pink-bg: #fff2f8;
+  --yellow: #ffd93d;
+  --mint: #6bdcb7;
+  --mint-soft: #d4f7ec;
+  --blue: #6db6ff;
+  --blue-soft: #d9ecff;
+  --purple: #b083f5;
+  --purple-soft: #ecdcff;
+  --orange: #ff924c;
+  --orange-soft: #ffe2cc;
+  --cream: #fff7fb;
+  --ink: #5a3d54;
+  --ink-soft: #a98aa0;
+  --shadow: 0 10px 30px rgba(255, 126, 179, 0.25);
+  --shadow-sm: 0 6px 16px rgba(180, 120, 160, 0.14);
+  --radius: 22px;
+  --radius-sm: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif, "Noto Color Emoji";
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, var(--pink-soft) 0, transparent 42%),
+    radial-gradient(circle at 88% 12%, var(--mint-soft) 0, transparent 40%),
+    radial-gradient(circle at 82% 88%, #ffe9f4 0, transparent 36%),
+    radial-gradient(circle at 18% 88%, var(--blue-soft) 0, transparent 40%),
+    linear-gradient(135deg, #fff5fa 0%, #fdeefb 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pet-rain { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.pet-rain span { position: absolute; top: -40px; font-size: 24px; opacity: .3; animation: fall linear infinite; }
+@keyframes fall { 0% { transform: translateY(-40px) rotate(0); } 100% { transform: translateY(110vh) rotate(360deg); } }
+
+.app { position: relative; z-index: 1; display: grid; grid-template-columns: 138px minmax(0, 1fr); min-height: 100vh; }
+
+/* ===== 左侧导航 ===== */
+.sidebar {
+  background: linear-gradient(180deg, #fffdfb 0%, #fff0f7 100%);
+  border-right: 2px solid var(--pink-soft);
+  padding: 20px 12px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.brand { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.brand-mascot {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--pink), var(--orange));
+  display: grid; place-items: center; font-size: 20px; box-shadow: var(--shadow-sm);
+  animation: wiggle 3s ease-in-out infinite;
+}
+@keyframes wiggle { 0%,100%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} }
+.brand-text h1 { font-size: 16px; color: var(--pink-deep); letter-spacing: 1px; }
+.brand-text p { font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+
+.nav { display: flex; flex-direction: column; gap: 7px; }
+.nav-item {
+  width: 100%; display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  border: none; background: transparent; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--ink-soft);
+  padding: 9px 10px; border-radius: 999px; transition: all .18s ease; text-align: left;
+}
+.nav-item:hover { background: var(--pink-soft); color: var(--ink); transform: translateX(3px); }
+.nav-item.active { background: linear-gradient(135deg, #ff8ec0, #ff9a5a); color: #fff; box-shadow: 0 6px 16px rgba(255, 126, 179, 0.4); }
+.nav-emoji { font-size: 19px; width: 24px; text-align: center; flex-shrink: 0; }
+
+.sidebar-foot { margin-top: auto; display: flex; gap: 8px; }
+.side-btn {
+  flex: 1; border: none; cursor: pointer; background: #fff; color: var(--ink-soft);
+  font-size: 12px; font-weight: 700; padding: 9px 4px; border-radius: 12px;
+  box-shadow: var(--shadow-sm); border: 2px solid var(--pink-soft); transition: .15s;
+}
+.side-btn:hover { background: var(--pink-soft); color: var(--ink); transform: translateY(-2px); }
+
+/* 折叠按钮 */
+.nav-toggle { width: 100%; border: none; background: var(--pink-soft); color: var(--pink-deep); border-radius: 12px; padding: 8px; font-size: 18px; font-weight: 800; cursor: pointer; margin-bottom: 4px; transition: .15s; line-height: 1; }
+.nav-toggle:hover { background: var(--pink); color: #fff; }
+
+/* ===== 主区 ===== */
+.main { padding: 22px 26px 50px; }
+.page { display: none; animation: fade .3s ease; }
+.page.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(8px);} to {opacity:1; transform:none;} }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.page-head h2 { font-size: 21px; color: var(--pink-deep); }
+.subtitle { color: var(--ink-soft); margin-bottom: 16px; font-size: 13px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+.btn { border: none; cursor: pointer; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 999px; transition: transform .15s, box-shadow .15s; }
+.btn:active { transform: scale(.95); }
+.btn-primary { background: linear-gradient(135deg, var(--pink), var(--orange)); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { box-shadow: var(--shadow); }
+.btn-ghost { background: var(--purple-soft); color: var(--purple); }
+.btn-ghost:hover { background: var(--purple); color: #fff; }
+.btn-danger { background: #ff7591; color: #fff; }
+.btn-update.none { background: #e9eaee; color: #9aa0aa; cursor: default; box-shadow: none; }
+.btn-update.avail { background: linear-gradient(135deg, #ff5b6e, #ff9a3d); color: #fff; box-shadow: 0 6px 18px rgba(255,91,110,.45); animation: pulseUpdate 1.4s ease-in-out infinite; }
+@keyframes pulseUpdate { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+.input { width: 100%; border: 2px solid var(--pink-soft); background: #fff; border-radius: var(--radius-sm); padding: 11px 14px; font-size: 14px; color: var(--ink); font-family: inherit; outline: none; transition: .15s; }
+.input:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-soft); }
+.select { cursor: pointer; }
+textarea.input { resize: vertical; }
+
+/* ===== 首页 ===== */
+.home-hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; margin-bottom: 16px; }
+.clock-card { background: linear-gradient(135deg, var(--pink), var(--purple)); border-radius: var(--radius); padding: 26px; color: #fff; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+.clock-card::after { content: "🐰"; position: absolute; right: 14px; bottom: 6px; font-size: 64px; opacity: .22; }
+.clock-time { font-size: 50px; font-weight: 800; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+.clock-date { font-size: 17px; margin-top: 6px; opacity: .95; }
+.clock-week { font-size: 13px; margin-top: 2px; opacity: .85; }
+
+.encourage-card { background: linear-gradient(135deg, #fff3c4, #ffd9ec); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; }
+.encourage-mascot { font-size: 38px; animation: bounce 1.4s ease infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.encourage-title { font-size: 14px; color: var(--ink); margin: 4px 0; }
+.encourage-text { font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.5; margin-bottom: 4px; }
+.encourage-en { font-size: 13px; color: var(--ink-soft); font-style: italic; margin-bottom: 12px; line-height: 1.4; }
+
+.home-checkin { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow-sm); border: 2px solid var(--mint-soft); margin-bottom: 12px; }
+.checkin-left { display: flex; align-items: center; gap: 12px; }
+.checkin-emoji { font-size: 32px; }
+.checkin-title { font-size: 16px; font-weight: 800; }
+.checkin-sub { font-size: 13px; color: var(--ink-soft); }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 12px; }
+.stat-card { background: #fff; border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid transparent; transition: transform .18s; }
+.stat-card:hover { transform: translateY(-4px); }
+.stat-card .stat-emoji { font-size: 28px; }
+.stat-card .stat-num { font-size: 28px; font-weight: 800; margin-top: 4px; }
+.stat-card .stat-label { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.stat-card.c1 { border-color: var(--pink-soft); } .stat-card.c1 .stat-num { color: var(--pink-deep); }
+.stat-card.c2 { border-color: var(--mint-soft); } .stat-card.c2 .stat-num { color: var(--mint); }
+.stat-card.c3 { border-color: var(--blue-soft); } .stat-card.c3 .stat-num { color: var(--blue); }
+.stat-card.c4 { border-color: var(--orange-soft); } .stat-card.c4 .stat-num { color: var(--orange); }
+
+.home-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.panel { background: #fff; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); }
+.panel h3 { font-size: 15px; margin-bottom: 14px; }
+.quick-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quick-item { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: var(--radius-sm); background: var(--cream); cursor: pointer; font-weight: 600; font-size: 14px; transition: transform .15s; border: 2px solid var(--pink-soft); }
+.quick-item:hover { transform: scale(1.03); background: var(--pink-soft); }
+.alert-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.alert-list li { display: flex; align-items: center; gap: 8px; font-size: 14px; background: var(--mint-soft); padding: 10px 12px; border-radius: var(--radius-sm); }
+.alert-list li.warn { background: var(--orange-soft); }
+
+/* ===== 筛选栏 ===== */
+.filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-bar .input { max-width: 280px; }
+
+/* ===== 卡片网格（客户） ===== */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.cust-card { background: #fff; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); border: 2px solid var(--pink-soft); position: relative; transition: transform .18s, box-shadow .18s; }
+.cust-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+.cust-avatar { width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; font-size: 28px; background: var(--purple-soft); margin-bottom: 10px; }
+.cust-name { font-size: 18px; font-weight: 800; }
+.cust-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tag { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--cream); color: var(--ink-soft); font-weight: 600; }
+.tag.pink { background: var(--pink-soft); color: var(--pink-deep); }
+.tag.mint { background: var(--mint-soft); color: #2aa583; }
+.tag.blue { background: var(--blue-soft); color: var(--blue); }
+.tag.yellow { background: var(--yellow); color: var(--ink); }
+.cust-meta { font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+.cust-meta b { color: var(--ink); }
+.cust-actions { display: flex; gap: 8px; margin-top: 12px; }
+.cust-actions button { flex: 1; font-size: 13px; padding: 8px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; }
+.btn-edit { background: var(--blue-soft); color: var(--blue); }
+.btn-del { background: #ffe0e3; color: #ff5b6e; }
+
+.empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--ink-soft); }
+.empty-state .big-emoji { font-size: 56px; display: block; margin-bottom: 10px; }
+
+/* ===== 每日打卡 ===== */
+.checkin-summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 16px; }
+.cs-card { background: #fff; border-radius: var(--radius); padding: 18px; text-align: center; box-shadow: var(--shadow-sm); border: 2px solid var(--pink-soft); }
+.cs-num { font-size: 30px; font-weight: 800; color: var(--pink-deep); }
+.cs-label { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.habit-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.habit-item { display: flex; align-items: center; gap: 12px; background: var(--cream); padding: 12px 14px; border-radius: var(--radius-sm); border: 2px solid var(--pink-soft); }
+.habit-item .h-ck { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--mint); cursor: pointer; display: grid; place-items: center; font-size: 15px; color: var(--mint); flex-shrink: 0; }
+.habit-item.done .h-ck { background: var(--mint); color: #fff; }
+.habit-item.done .h-text { text-decoration: line-through; color: var(--ink-soft); }
+.habit-emoji { font-size: 22px; }
+.h-text { flex: 1; font-size: 15px; font-weight: 600; }
+.h-del { border: none; background: #ffe0e3; color: #ff5b6e; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 14px; }
+.cal-day { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: var(--cream); color: var(--ink-soft); }
+.cal-day.full { background: linear-gradient(135deg, var(--pink), var(--orange)); color: #fff; }
+.cal-day.part { background: var(--yellow); color: var(--ink); }
+.cal-day.today { outline: 3px solid var(--purple); }
+
+/* ===== 每日事项 ===== */
+.daily-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 16px; }
+.daily-card { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--mint-soft); cursor: pointer; transition: transform .15s; }
+.daily-card:hover { transform: translateY(-3px); }
+.daily-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.daily-avatar { font-size: 26px; }
+.daily-card-head h4 { font-size: 16px; }
+.daily-progress { font-size: 12px; color: var(--ink-soft); margin-left: auto; }
+.daily-task { display: flex; align-items: center; gap: 8px; padding: 7px 0; font-size: 14px; border-top: 1px dashed var(--pink-soft); }
+.daily-task .ck { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--mint); display: grid; place-items: center; font-size: 13px; color: #fff; flex-shrink: 0; }
+.daily-task.done .ck { background: var(--mint); }
+.daily-task.done span { text-decoration: line-through; color: var(--ink-soft); }
+
+/* ===== 待办 ===== */
+.todo-add { display: flex; gap: 12px; margin-bottom: 14px; }
+.todo-add .input { flex: 1; }
+.todo-filter { display: flex; gap: 8px; margin-bottom: 14px; }
+.chip { border: 2px solid var(--pink-soft); background: #fff; color: var(--ink-soft); padding: 7px 16px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13px; }
+.chip.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+.todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.todo-item { display: flex; align-items: center; gap: 12px; background: #fff; padding: 13px 16px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); border-left: 6px solid var(--mint); }
+.todo-item.done { border-left-color: var(--ink-soft); opacity: .65; }
+.todo-item .todo-text { flex: 1; font-size: 15px; }
+.todo-item.done .todo-text { text-decoration: line-through; }
+.todo-check { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--mint); cursor: pointer; display: grid; place-items: center; font-size: 14px; color: var(--mint); flex-shrink: 0; }
+.todo-item.done .todo-check { background: var(--mint); color: #fff; }
+.todo-del { border: none; background: #ffe0e3; color: #ff5b6e; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.todo-progress-wrap { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); font-weight: 700; }
+.progress-bar { width: 140px; height: 12px; background: var(--pink-soft); border-radius: 999px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--mint), var(--blue)); transition: width .3s; }
+
+/* ===== 发货 ===== */
+.ship-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 16px; }
+.ship-card { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--blue-soft); }
+.ship-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ship-name { font-size: 17px; font-weight: 800; }
+.ship-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.ship-status.待发货 { background: var(--yellow); color: var(--ink); }
+.ship-status.已发货 { background: var(--blue-soft); color: var(--blue); }
+.ship-status.已签收 { background: var(--mint-soft); color: #2aa583; }
+.ship-meta { font-size: 13px; color: var(--ink-soft); line-height: 1.7; }
+.ship-actions { display: flex; gap: 8px; margin-top: 12px; }
+.ship-actions button { flex: 1; font-size: 13px; padding: 8px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; }
+
+.pill { background: var(--purple-soft); color: var(--purple); padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 13px; }
+
+/* ===== 总结 ===== */
+.summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 14px; margin-bottom: 20px; }
+.summary-stat { background: #fff; border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow-sm); text-align: center; }
+.summary-stat .ss-num { font-size: 26px; font-weight: 800; }
+.summary-stat .ss-label { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+.summary-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+.chart-box { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.bar-label { width: 70px; flex-shrink: 0; color: var(--ink-soft); font-weight: 600; }
+.bar-track { flex: 1; height: 18px; background: var(--cream); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+.bar-val { width: 36px; text-align: right; font-weight: 700; }
+.pie-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.pie { width: 120px; height: 120px; border-radius: 50%; flex-shrink: 0; }
+.pie-legend { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.pie-legend span { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 4px; }
+.rank-list { display: flex; flex-direction: column; gap: 10px; }
+.rank-item { display: flex; align-items: center; gap: 12px; background: var(--cream); padding: 10px 14px; border-radius: var(--radius-sm); }
+.rank-no { font-size: 20px; font-weight: 800; width: 30px; }
+.rank-name { font-weight: 700; flex: 1; }
+.rank-boxes { font-weight: 800; color: var(--orange); }
+
+/* ===== 库存 ===== */
+.inv-card { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--mint-soft); }
+.inv-top { display: flex; align-items: center; justify-content: space-between; }
+.inv-name { font-size: 17px; font-weight: 800; }
+.inv-stock { font-size: 28px; font-weight: 800; color: var(--mint); }
+.inv-stock.low { color: var(--orange); }
+.inv-meta { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+.inv-bar { height: 10px; background: var(--cream); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+.inv-bar > div { height: 100%; background: linear-gradient(90deg, var(--mint), var(--blue)); }
+.inv-bar > div.low { background: linear-gradient(90deg, var(--orange), var(--pink)); }
+.inv-actions { display: flex; gap: 8px; margin-top: 10px; }
+.inv-actions button { flex: 1; font-size: 13px; padding: 7px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; }
+.inv-actions .minus { background: #ffe0e3; color: #ff5b6e; }
+.inv-actions .plus { background: var(--mint-soft); color: #2aa583; }
+
+/* ===== 回访 ===== */
+.fup-list { display: flex; flex-direction: column; gap: 12px; }
+.fup-item { background: #fff; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow-sm); border-left: 6px solid var(--purple); }
+.fup-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.fup-cust { font-weight: 800; font-size: 15px; }
+.fup-date { font-size: 12px; color: var(--ink-soft); margin-left: auto; }
+.fup-note { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+.fup-del { float: right; border: none; background: #ffe0e3; color: #ff5b6e; width: 26px; height: 26px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+
+/* ===== 知识 ===== */
+.know-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.know-card { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--yellow); }
+.know-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.know-title { font-size: 16px; font-weight: 800; }
+.know-tag { font-size: 11px; background: var(--yellow); color: var(--ink); padding: 2px 9px; border-radius: 999px; font-weight: 700; }
+.know-body { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+.know-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.know-edit, .know-del { border: none; cursor: pointer; font-weight: 700; border-radius: 10px; padding: 8px 14px; font-size: 13px; line-height: 1; transition: .15s; }
+.know-edit { background: var(--pink-soft); color: var(--pink-deep); }
+.know-edit:hover { background: var(--pink-deep); color: #fff; }
+.know-del { background: #ffe0e3; color: #ff5b6e; }
+.know-del:hover { background: #ff5b6e; color: #fff; }
+
+/* ===== 朋友圈打卡语（老板版） ===== */
+.moment-panel { border: 2px solid var(--yellow); background: linear-gradient(135deg, #fffbe9, #fff0f7); padding: 14px 16px; margin-bottom: 12px; }
+.moment-actions { display: flex; gap: 8px; }
+.btn-sm { font-size: 12px; padding: 7px 12px; }
+.moment-text { font-size: 15px; font-weight: 800; line-height: 1.55; color: var(--ink); margin: 4px 0 6px; white-space: pre-wrap; }
+.moment-date { font-size: 12px; color: var(--ink-soft); }
+
+/* ===== 设备码（一码一机） ===== */
+.dev-code-panel { border: 2px dashed var(--pink-deep); }
+.dev-code-row { display: flex; gap: 8px; align-items: stretch; margin-top: 6px; }
+.dev-code-row .input { flex: 1; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.lock-dev { margin: 10px 0 2px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.lock-dev b { color: var(--pink-deep); font-family: ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
+.lock-dev-copy { border: none; background: var(--pink-deep); color: #fff; border-radius: 8px; padding: 4px 10px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.lock-dev-copy:hover { opacity: .9; }
+
+/* ===== 客户表格（横向） ===== */
+.cust-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cust-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 580px; }
+.cust-table th, .cust-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--pink-soft); vertical-align: middle; }
+.cust-table th { background: var(--cream); color: var(--pink-deep); font-weight: 800; font-size: 12px; position: sticky; top: 0; white-space: nowrap; }
+.cust-table tbody tr:hover { background: var(--pink-bg); }
+.cust-table .c-av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 17px; margin-right: 7px; vertical-align: middle; }
+.cust-table .c-name { font-weight: 800; }
+.cust-table .c-habit { color: var(--ink-soft); max-width: 170px; }
+.cust-table .c-boxes { font-weight: 800; color: var(--orange); white-space: nowrap; }
+.cust-table .c-act { display: flex; gap: 6px; white-space: nowrap; }
+.cust-table .c-act button { border: none; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-weight: 700; font-size: 12px; }
+.cust-table .btn-edit { background: var(--blue-soft); color: var(--blue); }
+.cust-table .btn-del { background: #ffe0e3; color: #ff5b6e; }
+
+/* ===== 设置 ===== */
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--pink-soft); }
+.set-row:last-child { border-bottom: none; }
+.set-row .input { max-width: 280px; }
+.set-title { font-weight: 700; }
+.set-desc { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+.switch input { display: none; }
+.switch span { position: absolute; inset: 0; background: var(--pink-soft); border-radius: 999px; cursor: pointer; transition: .2s; }
+.switch span::before { content: ""; position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: .2s; box-shadow: 0 2px 4px rgba(0,0,0,.15); }
+.switch input:checked + span { background: var(--pink); }
+.switch input:checked + span::before { transform: translateX(22px); }
+
+/* ===== 弹窗 ===== */
+.modal-mask { display: none; position: fixed; inset: 0; background: rgba(90,61,84,.45); z-index: 50; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
+.modal-mask.show { display: flex; animation: fade .2s ease; }
+.modal { background: var(--cream); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); border: 3px solid var(--pink-soft); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 2px dashed var(--pink-soft); }
+.modal-head h3 { font-size: 19px; color: var(--pink-deep); }
+.modal-close { border: none; background: var(--pink-soft); color: var(--pink-deep); width: 34px; height: 34px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 700; }
+.form { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.form label { font-size: 13px; font-weight: 700; color: var(--ink); display: flex; flex-direction: column; gap: 6px; }
+.req { color: var(--pink-deep); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 12px; margin-top: 6px; }
+.form-actions .btn { flex: 1; }
+.daily-modal-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+.daily-modal-task { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff; border-radius: var(--radius-sm); cursor: pointer; border: 2px solid var(--mint-soft); }
+.daily-modal-task .ck { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--mint); display: grid; place-items: center; color: #fff; }
+.daily-modal-task.done .ck { background: var(--mint); }
+
+/* ===== Toast ===== */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 999px; font-weight: 700; z-index: 100; box-shadow: var(--shadow); transition: transform .3s; font-size: 14px; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+  .home-hero, .home-bottom, .summary-charts { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-head h2 { font-size: 20px; }
+  .panel h3 { font-size: 15px; }
+  .encourage-text { font-size: 16px; }
+  .clock-time { font-size: 42px; }
+}
+@media (max-width: 680px) {
+  /* 窄屏仍保持左右分栏：导航始终在左侧 */
+  .app { grid-template-columns: 120px minmax(0, 1fr); }
+  .sidebar { padding: 14px 7px; gap: 10px; }
+  .brand-text p { display: none; }
+  .brand-text h1 { font-size: 14px; }
+  .brand-mascot { width: 30px; height: 30px; font-size: 16px; }
+  .nav-item { padding: 8px 6px; font-size: 11px; gap: 6px; }
+  .nav-emoji { font-size: 16px; width: 20px; }
+  .side-btn { font-size: 11px; padding: 7px 2px; }
+  .main { padding: 14px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-hero, .home-bottom, .summary-charts { grid-template-columns: 1fr; }
+  body { font-size: 13px; }
+  .page-head h2 { font-size: 19px; }
+  .panel h3 { font-size: 15px; }
+  .subtitle { font-size: 12.5px; }
+  .btn { font-size: 13px; padding: 9px 14px; }
+  .encourage-text { font-size: 16px; }
+  .clock-time { font-size: 38px; }
+  .stat-card .stat-num { font-size: 24px; }
+  .cust-table th, .cust-table td { padding: 9px 10px; }
+}
+@media (max-width: 460px) {
+  /* 极窄手机：导航栏收窄为图标+短标签，仍保持在左侧 */
+  .app { grid-template-columns: 96px minmax(0, 1fr); }
+  .sidebar { padding: 12px 5px; gap: 8px; }
+  .brand { justify-content: center; }
+  .brand-text h1 { font-size: 12px; }
+  .nav-item { padding: 8px 4px; font-size: 11px; gap: 4px; justify-content: flex-start; }
+  .nav-emoji { font-size: 15px; width: 18px; }
+  body { font-size: 12.5px; }
+  .page-head h2 { font-size: 18px; }
+  .panel h3 { font-size: 14px; }
+  .btn { font-size: 12px; padding: 9px 12px; }
+  .encourage-text { font-size: 15px; }
+  .clock-time { font-size: 32px; }
+  .stat-card .stat-num { font-size: 22px; }
+  .moment-text { font-size: 15px; }
+  .home-hero { gap: 12px; }
+}
+
+/* ===== 收款售卖 ===== */
+.sell-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.sell-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; }
+.sell-stat { background: #fff; border-radius: var(--radius); padding: 16px; text-align: center; box-shadow: var(--shadow-sm); min-width: 0; overflow: hidden; }
+.sell-stat .ss-num { font-size: 24px; font-weight: 800; }
+.sell-stat .ss-label { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+.sell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.paycodes { display: flex; gap: 14px; flex-wrap: wrap; }
+.paycode-item { width: 130px; text-align: center; }
+.paycode-item img { width: 130px; height: 130px; object-fit: cover; border-radius: var(--radius-sm); border: 2px solid var(--pink-soft); background: #fff; }
+.paycode-name { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--ink); margin-top: 6px; }
+.pc-del { background: #ffe0e3; color: #ff5b6e; border: none; border-radius: 999px; width: 20px; height: 20px; cursor: pointer; font-size: 11px; line-height: 1; }
+.product-list { display: flex; flex-direction: column; gap: 10px; }
+.product-item { display: flex; align-items: center; justify-content: space-between; background: var(--cream); border-radius: var(--radius-sm); padding: 12px 14px; }
+.pi-info { display: flex; flex-direction: column; }
+.pi-name { font-weight: 700; color: var(--ink); }
+.pi-price { font-size: 13px; color: var(--pink-deep); }
+.pi-del, .pi-edit { background: #ffe0e3; color: #ff5b6e; border: none; border-radius: 999px; width: 30px; height: 30px; cursor: pointer; font-size: 14px; }
+.order-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+.order-card { background: #fff; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); border: 2px solid var(--pink-soft); }
+.order-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.order-cust { font-weight: 800; color: var(--pink-deep); font-size: 15px; }
+.order-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.order-status.待付款 { background: var(--yellow); color: var(--ink); }
+.order-status.已收款 { background: var(--mint-soft); color: #2aa583; }
+.order-status.已发货 { background: var(--blue-soft); color: var(--blue); }
+.order-meta { font-size: 13px; color: var(--ink); line-height: 1.7; margin-bottom: 10px; word-break: break-all; }
+.order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-paid { background: var(--mint-soft); color: #2aa583; border: none; border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.btn-ship { background: var(--blue-soft); color: var(--blue); border: none; border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.order-amount { background: var(--cream); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 14px; color: var(--ink); }
+.order-amount b { color: var(--pink-deep); font-size: 17px; }
+.empty-mini { color: var(--ink-soft); font-size: 13px; padding: 12px 0; }
+@media (max-width: 680px) {
+  .sell-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .sell-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== 主题配色 ===== */
+.theme-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.theme-chip { width: 34px; height: 34px; border-radius: 999px; border: 3px solid transparent; cursor: pointer; transition: .15s; box-shadow: var(--shadow-sm); }
+.theme-chip:hover { transform: scale(1.08); }
+.theme-chip.active { border-color: var(--ink); box-shadow: 0 0 0 3px #fff, var(--shadow); }
+.theme-color { width: 56px; height: 38px; padding: 3px; cursor: pointer; }
+
+/* ===== 试用 / 订阅 锁屏 ===== */
+.lock-screen { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(90,61,84,.55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.lock-screen.show { display: flex; }
+.lock-box { background: #fff; border-radius: 26px; padding: 30px 26px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow); max-height: 90vh; overflow: auto; }
+.lock-emoji { font-size: 54px; }
+.lock-box h2 { color: var(--pink-deep); font-size: 22px; margin: 6px 0 10px; }
+.lock-desc { color: var(--ink-soft); font-size: 14px; margin-bottom: 14px; }
+.lock-seller { background: var(--cream); border-radius: 14px; padding: 10px; font-weight: 700; color: var(--pink-deep); margin-bottom: 16px; word-break: break-all; }
+.lock-label { display: block; text-align: left; font-size: 13px; color: var(--ink); margin-bottom: 6px; }
+.lock-err { color: #ff5b6e; font-size: 13px; min-height: 18px; margin-top: 6px; }
+.lock-activate { width: 100%; margin-top: 4px; }
+.lock-tip { font-size: 11px; color: var(--ink-soft); margin-top: 14px; line-height: 1.6; }
+
+/* 弹窗在手机上可滚动、不顶出屏幕 */
+.modal { max-height: 90vh; overflow: auto; }
+@media (max-width: 460px) { .modal { width: calc(100vw - 24px); } }
+
+/* 刘海屏安全区适配 */
+@media (max-width: 680px) {
+  .main { padding-top: max(14px, env(safe-area-inset-top)); padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  .sidebar { padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+}
+
+/* ===== 下载/分享按钮 + 安装引导 ===== */
+.share-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.share-btns .btn { flex: 1; min-width: 130px; }
+.install-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; align-items: center; gap: 10px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(135deg, var(--pink), var(--orange)); color: #fff; box-shadow: 0 -6px 20px rgba(255,126,179,.3); }
+.install-banner.show { display: flex; }
+.ib-text { flex: 1; font-size: 13px; line-height: 1.5; }
+.ib-text b { background: rgba(255,255,255,.25); padding: 1px 6px; border-radius: 6px; }
+.ib-close { background: rgba(255,255,255,.25); border: none; color: #fff; font-weight: 700; padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.ib-install { background: #fff; color: var(--pink-deep); border: none; font-weight: 800; padding: 8px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.ib-install:active { transform: scale(.95); }
+
+/* ===== 侧栏折叠态（置于末尾，确保覆盖上方窄屏媒体查询） ===== */
+.app.nav-collapsed { grid-template-columns: 60px minmax(0, 1fr); }
+.app.nav-collapsed .brand-text { display: none; }
+.app.nav-collapsed .brand { justify-content: center; }
+.app.nav-collapsed .sidebar-foot { display: none; }
+.app.nav-collapsed .nav-item { font-size: 0; justify-content: center; padding: 11px 0; gap: 0; }
+.app.nav-collapsed .nav-emoji { font-size: 20px; width: auto; }
+
+</style>
+</head>
+<body>
+  <div class="pet-rain" id="petRain"></div>
+
+  <div class="app">
+    <!-- 左侧导航 -->
+    <aside class="sidebar">
+      <button class="nav-toggle" id="navToggle" title="收起 / 展开菜单">«</button>
+      <div class="brand">
+        <div class="brand-mascot">🐰</div>
+        <div class="brand-text">
+          <h1 id="brandName">美白小铺</h1>
+          <p>萌宠工作台</p>
+        </div>
+      </div>
+      <nav class="nav" id="navMenu">
+        <button class="nav-item active" data-page="home"><span class="nav-emoji">🏡</span>首页</button>
+        <button class="nav-item" data-page="knowledge"><span class="nav-emoji">💡</span>美白知识</button>
+        <button class="nav-item" data-page="customers"><span class="nav-emoji">🐱</span>客户宝宝</button>
+        <button class="nav-item" data-page="checkin"><span class="nav-emoji">🌞</span>每日打卡</button>
+        <button class="nav-item" data-page="daily"><span class="nav-emoji">🍼</span>每日事项</button>
+        <button class="nav-item" data-page="todo"><span class="nav-emoji">📝</span>待办事项</button>
+        <button class="nav-item" data-page="shipping"><span class="nav-emoji">📦</span>发货管理</button>
+        <button class="nav-item" data-page="summary"><span class="nav-emoji">📊</span>总结报表</button>
+        <button class="nav-item" data-page="inventory"><span class="nav-emoji">🧴</span>库存管理</button>
+        <button class="nav-item" data-page="followup"><span class="nav-emoji">💌</span>回访记录</button>
+        <button class="nav-item" data-page="sell"><span class="nav-emoji">💰</span>收款售卖</button>
+        <button class="nav-item" data-page="settings"><span class="nav-emoji">⚙️</span>设置</button>
+      </nav>
+      <div class="sidebar-foot">
+        <button class="side-btn" id="exportBtn">📤 导出</button>
+        <button class="side-btn" id="importBtn">📥 导入</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- 1 首页 -->
+      <section class="page active" id="page-home">
+        <div class="home-hero">
+          <div class="clock-card">
+            <div class="clock-time" id="clockTime">00:00:00</div>
+            <div class="clock-date" id="clockDate">——</div>
+            <div class="clock-week" id="clockWeek">——</div>
+          </div>
+          <div class="encourage-card">
+            <div class="encourage-mascot">🌟</div>
+            <h2 class="encourage-title">今日能量语</h2>
+            <p class="encourage-text" id="encourageCn">加载中…</p>
+            <p class="encourage-en" id="encourageEn"></p>
+            <button class="btn btn-ghost" id="rerollQuote">换一句 ✨</button>
+          </div>
+        </div>
+
+        <div class="home-checkin">
+          <div class="checkin-left">
+            <span class="checkin-emoji">✅</span>
+            <div>
+              <div class="checkin-title">今日打卡</div>
+              <div class="checkin-sub" id="checkinSub">点我开始今天的坚持</div>
+            </div>
+          </div>
+        <button class="btn btn-primary" id="goCheckin">去打卡 🌞</button>
+      </div>
+
+      <div class="panel moment-panel" id="momentPanel">
+        <div class="panel-head">
+          <h3>🌅 今日朋友圈打卡语</h3>
+          <div class="moment-actions">
+            <button class="btn btn-ghost btn-sm" id="momentReroll">🔄 换一条</button>
+            <button class="btn btn-primary btn-sm" id="momentCopy">📋 复制</button>
+          </div>
+        </div>
+        <p class="moment-text" id="momentText">加载中…</p>
+        <p class="moment-date" id="momentDate"></p>
+      </div>
+
+      <div class="panel women-panel" id="womenPanel">
+        <div class="panel-head">
+          <h3>💪 今日女神励志</h3>
+          <div class="moment-actions">
+            <button class="btn btn-ghost btn-sm" id="womenReroll">🔄 换一条</button>
+            <button class="btn btn-primary btn-sm" id="womenCopy">📋 复制</button>
+          </div>
+        </div>
+        <p class="moment-text" id="womenText">加载中…</p>
+        <p class="moment-date" id="womenDate"></p>
+      </div>
+
+      <div class="stat-grid" id="homeStats"></div>
+
+        <div class="home-bottom">
+          <div class="panel quick-panel">
+            <h3>🐾 快捷入口</h3>
+            <div class="quick-list" id="quickList"></div>
+          </div>
+          <div class="panel alert-panel">
+            <h3>🔔 今日提醒</h3>
+            <ul class="alert-list" id="homeAlerts"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 客户宝宝 -->
+      <section class="page" id="page-customers">
+        <div class="page-head">
+          <h2>🐱 客户宝宝管理</h2>
+          <button class="btn btn-primary" id="addCustomerBtn">＋ 添加宝宝</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="customerSearch" class="input" placeholder="🔍 搜索昵称 / 城市 / 职业" />
+          <select id="customerCityFilter" class="input select"></select>
+        </div>
+        <div id="customerList"></div>
+      </section>
+
+      <!-- 3 每日打卡 -->
+      <section class="page" id="page-checkin">
+        <div class="page-head">
+          <h2>🌞 我的每日打卡</h2>
+          <span class="pill" id="checkinDatePill">——</span>
+        </div>
+        <div class="checkin-summary">
+          <div class="cs-card"><div class="cs-num" id="csStreak">0</div><div class="cs-label">🔥 连续天数</div></div>
+          <div class="cs-card"><div class="cs-num" id="csToday">0/0</div><div class="cs-label">✅ 今日完成</div></div>
+          <div class="cs-card"><div class="cs-num" id="csTotal">0</div><div class="cs-label">🏅 累计打卡</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h3>💪 今日习惯</h3>
+            <button class="btn btn-ghost" id="addHabitBtn">＋ 添加习惯</button>
+          </div>
+          <div class="habit-list" id="habitList"></div>
+        </div>
+        <div class="panel">
+          <h3>📅 近 14 天打卡</h3>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+      </section>
+
+      <!-- 4 每日事项 -->
+      <section class="page" id="page-daily">
+        <div class="page-head">
+          <h2>🍼 每日宝宝关怀</h2>
+          <span class="pill" id="dailyDatePill">——</span>
+        </div>
+        <p class="subtitle">每天给每个宝宝安排的小任务，完成后点一下打勾 ✅</p>
+        <div class="daily-wrap" id="dailyList"></div>
+      </section>
+
+      <!-- 5 待办事项 -->
+      <section class="page" id="page-todo">
+        <div class="page-head">
+          <h2>📝 我的待办</h2>
+          <div class="todo-progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="todoProgressFill"></div></div>
+            <span id="todoProgressText">0/0</span>
+          </div>
+        </div>
+        <div class="todo-add">
+          <input type="text" id="todoInput" class="input" placeholder="✍️ 写点要做的正经事…" />
+          <button class="btn btn-primary" id="todoAddBtn">添加</button>
+        </div>
+        <div class="todo-filter">
+          <button class="chip active" data-filter="all">全部</button>
+          <button class="chip" data-filter="active">未完成</button>
+          <button class="chip" data-filter="done">已完成</button>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+      </section>
+
+      <!-- 6 发货管理 -->
+      <section class="page" id="page-shipping">
+        <div class="page-head">
+          <h2>📦 发货管理</h2>
+          <button class="btn btn-primary" id="addShipBtn">＋ 新建发货</button>
+        </div>
+        <div class="filter-bar">
+          <select id="shipStatusFilter" class="input select">
+            <option value="all">全部状态</option>
+            <option value="待发货">待发货</option>
+            <option value="已发货">已发货</option>
+            <option value="已签收">已签收</option>
+          </select>
+          <select id="shipCustomerFilter" class="input select"></select>
+        </div>
+        <div class="ship-grid" id="shipList"></div>
+      </section>
+
+      <!-- 7 总结报表 -->
+      <section class="page" id="page-summary">
+        <div class="page-head">
+          <h2>📊 经营总结</h2>
+          <button class="btn btn-ghost" id="refreshSummary">🔄 刷新数据</button>
+        </div>
+        <div class="summary-stats" id="summaryStats"></div>
+        <div class="summary-charts">
+          <div class="panel chart-panel"><h3>🌆 宝宝城市分布</h3><div id="cityChart" class="chart-box"></div></div>
+          <div class="panel chart-panel"><h3>💼 职业分布</h3><div id="jobChart" class="chart-box"></div></div>
+          <div class="panel chart-panel"><h3>📦 近 6 个月发货趋势</h3><div id="monthChart" class="chart-box"></div></div>
+          <div class="panel chart-panel"><h3>🍊 客户年龄段</h3><div id="ageChart" class="chart-box"></div></div>
+        </div>
+        <div class="panel">
+          <h3>🏆 最靓的崽（喝得最多）</h3>
+          <div class="rank-list" id="rankList"></div>
+        </div>
+      </section>
+
+      <!-- 8 库存管理 -->
+      <section class="page" id="page-inventory">
+        <div class="page-head">
+          <h2>🧴 库存管理</h2>
+          <button class="btn btn-primary" id="addInvBtn">＋ 添加货品</button>
+        </div>
+        <p class="subtitle">记录货品库存，低于预警值会提醒补货 🔔</p>
+        <div class="card-grid" id="invList"></div>
+      </section>
+
+      <!-- 9 回访记录 -->
+      <section class="page" id="page-followup">
+        <div class="page-head">
+          <h2>💌 回访记录</h2>
+          <button class="btn btn-primary" id="addFupBtn">＋ 新建回访</button>
+        </div>
+        <div class="filter-bar">
+          <select id="fupCustomerFilter" class="input select"></select>
+        </div>
+        <div class="fup-list" id="fupList"></div>
+      </section>
+
+      <!-- 10 美白知识 -->
+      <section class="page" id="page-knowledge">
+        <div class="page-head">
+          <h2>💡 美白知识库</h2>
+          <button class="btn btn-primary" id="addKnowBtn">＋ 添加笔记</button>
+        </div>
+        <div class="know-list" id="knowList"></div>
+      </section>
+
+      <!-- 11 收款售卖 -->
+      <section class="page" id="page-sell">
+        <div class="page-head">
+          <h2>💰 收款售卖</h2>
+          <div class="sell-head-actions">
+            <button class="btn btn-ghost" id="addProductBtn">＋ 商品</button>
+            <button class="btn btn-ghost" id="setPayCodeBtn">📷 收款码</button>
+            <button class="btn btn-primary" id="addOrderBtn">＋ 新订单</button>
+          </div>
+        </div>
+
+        <div class="sell-stats" id="sellStats"></div>
+
+        <div class="sell-grid">
+          <div class="panel">
+            <h3>📷 我的收款码</h3>
+            <div class="paycodes" id="payCodeBox"></div>
+            <p class="subtitle">点右上角「收款码」上传微信 / 支付宝收款码图片，客户扫码即可付款，图片仅存本机。</p>
+          </div>
+          <div class="panel">
+            <h3>🛍️ 在售商品</h3>
+            <div class="product-list" id="productList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>📋 订单记录</h3>
+            <select id="orderStatusFilter" class="input select">
+              <option value="all">全部状态</option>
+              <option value="待付款">待付款</option>
+              <option value="已收款">已收款</option>
+              <option value="已发货">已发货</option>
+            </select>
+          </div>
+          <div class="order-list" id="orderList"></div>
+        </div>
+      </section>
+
+      <!-- 12 设置 -->
+      <section class="page" id="page-settings">
+        <div class="page-head"><h2>⚙️ 设置</h2></div>
+        <div class="panel">
+          <h3>🏪 店铺信息</h3>
+          <label class="set-row">工作台名称
+            <input type="text" id="setBizName" class="input" placeholder="如：美白小铺" />
+          </label>
+          <label class="set-row">你的微信号（分享版锁屏展示）
+            <input type="text" id="setSellerWechat" class="input" placeholder="如：beauty_888" />
+          </label>
+        </div>
+
+        <!-- 卖家专用：分享与授权（仅 owner 模式可见） -->
+        <div class="panel" id="ownerPanel" style="display:none">
+          <h3>📱 下载与分享</h3>
+          <p class="subtitle">先把工作台装到自己手机，再发给好友（好友仅 7 天试用）。分享链接与激活码均限时 10 分钟、且激活码一次性使用。</p>
+          <div class="share-btns">
+            <button class="btn btn-ghost" id="dlOwnerBtn">📥 下载正本(自用)</button>
+            <button class="btn btn-ghost" id="dlUserBtn">📄 生成用户版(发好友)</button>
+          </div>
+          <p class="set-desc">「正本」是你的老板版（可生成激活码）；「用户版」已烘焙 7 天试用，直接发微信好友即可，打开即倒计时。</p>
+          <div class="set-row">
+            <div>
+              <div class="set-title">① 生成分享链接</div>
+              <div class="set-desc">已部署到托管后用，发给别人打开即 7 天试用版（链接 10 分钟内有效）</div>
+            </div>
+            <button class="btn btn-primary" id="genShareBtn">生成链接</button>
+          </div>
+          <input type="text" id="shareLinkOut" class="input" readonly style="margin:10px 0;font-size:12px" />
+          <div class="set-row">
+            <div>
+              <div class="set-title">② 生成激活码（订阅）</div>
+              <div class="set-desc">好友试用到期后，发激活码给他即可解锁（10 分钟内有效、仅可使用一次）</div>
+            </div>
+          </div>
+          <div class="form-row" style="align-items:flex-end">
+            <label>有效分钟<input type="number" id="codeDays" class="input" min="1" value="10" /></label>
+            <button class="btn btn-primary" id="genCodeBtn">生成激活码</button>
+          </div>
+          <label class="set-row" style="display:block;margin-top:8px">客户手机号（必填，激活时核对）<input type="text" id="custPhone" class="input" placeholder="客户购码时登记的手机号" style="margin-top:4px" /></label>
+          <input type="text" id="codeOut" class="input" readonly style="margin-top:10px;font-size:12px" />
+        </div>
+        <div class="panel">
+          <h3>🔄 打卡记录模式</h3>
+          <div class="set-row">
+            <div>
+              <div class="set-title">每日重置</div>
+              <div class="set-desc">每天从零开始重新打卡（适合每日习惯）</div>
+            </div>
+            <label class="switch"><input type="radio" name="mode" value="reset" /><span></span></label>
+          </div>
+          <div class="set-row">
+            <div>
+              <div class="set-title">累积记录</div>
+              <div class="set-desc">勾选后保持，累计统计（适合长期坚持）</div>
+            </div>
+            <label class="switch"><input type="radio" name="mode" value="cumulative" /><span></span></label>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>🎨 主题配色</h3>
+          <p class="subtitle">换上你的品牌色，工作台立刻变专属～买给同行也更有辨识度。</p>
+          <div class="theme-row" id="themeRow"></div>
+          <label class="set-row">自定义主色 <input type="color" id="themeCustom" class="input theme-color" value="#ff7eb3" /></label>
+        </div>
+        <div class="panel">
+          <h3>🔄 版本更新</h3>
+          <div class="set-actions">
+            <button class="btn btn-update none" id="updateBtn">✅ 已是最新</button>
+            <button class="btn btn-ghost" id="updateCheckBtn">手动检查更新</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>💾 数据管理</h3>
+          <div class="set-actions">
+            <button class="btn btn-ghost" id="setExport">📤 导出数据</button>
+            <button class="btn btn-ghost" id="setImport">📥 导入数据</button>
+            <button class="btn btn-danger" id="setClear">🗑 清空全部数据</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 客户表单 -->
+  <div class="modal-mask" id="customerModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="customerModalTitle">添加宝宝</h3><button class="modal-close" data-close="customerModal">✕</button></div>
+      <form id="customerForm" class="form">
+        <input type="hidden" id="custId" />
+        <label>昵称 / 姓名 <span class="req">*</span><input type="text" id="custName" class="input" required placeholder="如：小白兔" /></label>
+        <div class="form-row">
+          <label>年龄<input type="number" id="custAge" class="input" min="0" placeholder="如：25" /></label>
+          <label>城市<input type="text" id="custCity" class="input" placeholder="如：上海" /></label>
+        </div>
+        <label>职业<input type="text" id="custJob" class="input" placeholder="如：老师" /></label>
+        <label>生活习惯（怕晒 / 熬夜 / 爱喝奶茶…）<input type="text" id="custHabit" class="input" placeholder="用逗号分隔" /></label>
+        <div class="form-row">
+          <label>开始喝美白饮日期<input type="date" id="custStart" class="input" /></label>
+          <label>购买了几盒 <span class="req">*</span><input type="number" id="custBoxes" class="input" min="0" value="0" required /></label>
+        </div>
+        <label>备注<textarea id="custNote" class="input" rows="2" placeholder="皮肤状态、目标等"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="customerModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 🐾</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 发货表单 -->
+  <div class="modal-mask" id="shipModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="shipModalTitle">新建发货</h3><button class="modal-close" data-close="shipModal">✕</button></div>
+      <form id="shipForm" class="form">
+        <input type="hidden" id="shipId" />
+        <label>客户宝宝 <span class="req">*</span><select id="shipCustomer" class="input select" required></select></label>
+        <div class="form-row">
+          <label>产品<input type="text" id="shipProduct" class="input" value="胶原蛋白美白饮" /></label>
+          <label>盒数 <span class="req">*</span><input type="number" id="shipBoxes" class="input" min="1" value="1" required /></label>
+        </div>
+        <div class="form-row">
+          <label>发货日期<input type="date" id="shipDate" class="input" /></label>
+          <label>状态<select id="shipStatus" class="input select"><option value="待发货">待发货</option><option value="已发货">已发货</option><option value="已签收">已签收</option></select></label>
+        </div>
+        <label>快递单号<input type="text" id="shipTrack" class="input" placeholder="选填" /></label>
+        <label>收货地址<textarea id="shipAddr" class="input" rows="2" placeholder="选填"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="shipModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 📦</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 每日事项弹窗 -->
+  <div class="modal-mask" id="dailyModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="dailyModalTitle">宝宝今日任务</h3><button class="modal-close" data-close="dailyModal">✕</button></div>
+      <div id="dailyModalBody" class="daily-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 库存表单 -->
+  <div class="modal-mask" id="invModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="invModalTitle">添加货品</h3><button class="modal-close" data-close="invModal">✕</button></div>
+      <form id="invForm" class="form">
+        <input type="hidden" id="invId" />
+        <label>货品名称 <span class="req">*</span><input type="text" id="invName" class="input" required placeholder="如：胶原蛋白美白饮" /></label>
+        <div class="form-row">
+          <label>当前库存<input type="number" id="invStock" class="input" min="0" value="0" /></label>
+          <label>预警值<input type="number" id="invWarn" class="input" min="0" value="5" /></label>
+        </div>
+        <label>规格 / 单位<input type="text" id="invUnit" class="input" placeholder="如：盒" /></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="invModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 🧴</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 回访表单 -->
+  <div class="modal-mask" id="fupModal">
+    <div class="modal">
+      <div class="modal-head"><h3>新建回访</h3><button class="modal-close" data-close="fupModal">✕</button></div>
+      <form id="fupForm" class="form">
+        <input type="hidden" id="fupId" />
+        <label>客户宝宝 <span class="req">*</span><select id="fupCustomer" class="input select" required></select></label>
+        <label>回访日期<input type="date" id="fupDate" class="input" /></label>
+        <label>反馈 / 备注<textarea id="fupNote" class="input" rows="3" placeholder="皮肤变白情况、是否需要回购…"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="fupModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 💌</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 知识表单 -->
+  <div class="modal-mask" id="knowModal">
+    <div class="modal">
+      <div class="modal-head"><h3>添加美白笔记</h3><button class="modal-close" data-close="knowModal">✕</button></div>
+      <form id="knowForm" class="form">
+        <input type="hidden" id="knowId" />
+        <label>标题 <span class="req">*</span><input type="text" id="knowTitle" class="input" required placeholder="如：美白饮最佳饮用时间" /></label>
+        <label>标签<input type="text" id="knowTag" class="input" placeholder="如：饮用技巧" /></label>
+        <label>内容<textarea id="knowBody" class="input" rows="4" placeholder="写点专业小知识…"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="knowModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 💡</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 习惯表单 -->
+  <div class="modal-mask" id="habitModal">
+    <div class="modal">
+      <div class="modal-head"><h3>添加习惯</h3><button class="modal-close" data-close="habitModal">✕</button></div>
+      <form id="habitForm" class="form">
+        <label>习惯内容 <span class="req">*</span><input type="text" id="habitText" class="input" required placeholder="如：喝美白饮" /></label>
+        <label>图标 emoji<input type="text" id="habitIcon" class="input" value="✨" placeholder="如：☀️" /></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="habitModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 💪</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 下单表单 -->
+  <div class="modal-mask" id="orderModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="orderModalTitle">新建订单</h3><button class="modal-close" data-close="orderModal">✕</button></div>
+      <form id="orderForm" class="form">
+        <input type="hidden" id="orderId" />
+        <label>客户昵称 <span class="req">*</span><input type="text" id="orderCustomer" class="input" required placeholder="如：小白兔" /></label>
+        <label>商品 <span class="req">*</span><select id="orderProduct" class="input select" required></select></label>
+        <div class="form-row">
+          <label>数量<input type="number" id="orderQty" class="input" min="1" value="1" /></label>
+          <label>单价(元)<input type="number" id="orderPrice" class="input" min="0" step="0.01" /></label>
+        </div>
+        <div class="order-amount">合计：<b id="orderAmount">¥0.00</b></div>
+        <label>收款方式<select id="orderMethod" class="input select"><option value="微信">微信</option><option value="支付宝">支付宝</option><option value="现金">现金</option><option value="转账">银行/转账</option></select></label>
+        <label>备注<textarea id="orderNote" class="input" rows="2" placeholder="选填，如：同城面交 / 要发票"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="orderModal">取消</button>
+          <button type="submit" class="btn btn-primary">创建订单 💰</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 收款码上传 -->
+  <div class="modal-mask" id="payCodeModal">
+    <div class="modal">
+      <div class="modal-head"><h3>上传收款码</h3><button class="modal-close" data-close="payCodeModal">✕</button></div>
+      <form id="payCodeForm" class="form">
+        <label>收款码类型<select id="payCodeType" class="input select"><option value="wechat">微信收款码</option><option value="alipay">支付宝收款码</option></select></label>
+        <label>选择图片<input type="file" id="payCodeFile" class="input" accept="image/*" /></label>
+        <p class="subtitle">图片会以 base64 保存在本机浏览器，不上传任何服务器，纯本地使用，换设备或清缓存会丢失。</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="payCodeModal">取消</button>
+          <button type="button" class="btn btn-primary" id="payCodeSaveBtn">保存 📷</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 商品表单 -->
+  <div class="modal-mask" id="productModal">
+    <div class="modal">
+      <div class="modal-head"><h3 id="productModalTitle">添加商品</h3><button class="modal-close" data-close="productModal">✕</button></div>
+      <form id="productForm" class="form">
+        <input type="hidden" id="productId" />
+        <label>商品名称 <span class="req">*</span><input type="text" id="productName" class="input" required placeholder="如：胶原蛋白美白饮 1盒" /></label>
+        <label>单价(元) <span class="req">*</span><input type="number" id="productPrice" class="input" min="0" step="0.01" required placeholder="如：199" /></label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close="productModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存 🛍️</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 手机端“安装到桌面”引导 -->
+  <div class="install-banner" id="installBanner">
+    <div class="ib-text">📱 想随时打开？<b id="ibHint">点浏览器菜单 → 添加到主屏幕</b>，工作台就常驻你手机桌面啦</div>
+    <button class="ib-install" id="ibInstall" style="display:none">📲 安装到桌面</button>
+    <button class="ib-close" id="ibClose">✕</button>
+  </div>
+
+  <!-- 试用 / 订阅 锁屏 -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-box">
+      <div class="lock-emoji">🔒</div>
+      <h2 id="lockTitle">试用已结束</h2>
+      <p id="lockDesc" class="lock-desc"></p>
+      <div class="lock-seller" id="lockSeller"></div>
+      <label class="lock-label">你的手机号（与购码登记一致）<input type="text" id="actPhone" class="input" placeholder="输入登记的手机号" /></label>
+      <label class="lock-label">输入激活码（订阅后向卖家获取）</label>
+      <input type="text" id="actCode" class="input" placeholder="粘贴激活码" />
+      <div class="lock-err" id="actErr"></div>
+      <button class="btn btn-primary lock-activate" id="actBtn">激活并继续使用 🔓</button>
+      <p class="lock-tip">提示：激活码已绑定你购码时登记的手机号，转发给他人无法使用；10 分钟内、仅可使用一次。如需「付款自动解锁」可接入后端云函数。</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+'use strict';
+
+/* ===== 数据 ===== */
+const DB = {
+  bizName: '美白小铺',
+  dailyMode: 'reset',                 // 'reset' 每日重置 | 'cumulative' 累积记录
+  customers: [],
+  todos: [],
+  shippings: [],
+  daily: {},                         // {date:{custId:[{id,text,done}]}}
+  habits: [{ id: 'h1', text: '喝美白饮', icon: '🥤' }, { id: 'h2', text: '涂防晒', icon: '☀️' }, { id: 'h3', text: '早睡不熬夜', icon: '🌙' }, { id: 'h4', text: '记录客户反馈', icon: '📝' }],
+  checkin: {},                       // {date:{habitId:bool}}
+  checkinLog: [],                    // [{date, habitId}]
+  inventory: [],
+  followups: [],
+  orders: [],                       // 收款订单
+  products: [],                     // 在售商品
+  payCodes: { wechat: '', alipay: '' }, // 收款码图片(base64)
+  theme: 'sakura',                  // 主题配色 key
+  sellerWechat: '',                 // 卖家微信号（生成分享链接/锁屏展示用）
+  usedCodes: [],                    // 已使用过的激活码（保证一次性使用）
+  knowledge: [
+    { id: 'k1', title: '美白饮最佳饮用时间', tag: '饮用技巧', body: '早上空腹或睡前一杯，吸收更好，记得温水冲泡别用沸水。' },
+    { id: 'k2', title: '防晒是美白地基', tag: '日常', body: '紫外线会让黑色素活跃，户外每 2-3 小时补涂一次防晒。' },
+    { id: 'k3', title: '多喝水代谢黑色素', tag: '日常', body: '每天 1500-2000ml 水，帮助代谢和皮肤锁水。' },
+  ],
+};
+const STORE_KEY = 'meibai_workbench_v2';
+const BUILD_ID = '20260801_152129';   // 构建时由 build_workbench.py 注入时间戳，用于检测新版本
+
+/* ===== 工具 ===== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const pick = (arr, seed) => arr[Math.abs(seed) % arr.length];
+const MASCOTS = ['🐱','🐰','🐻','🐼','🐧','🐥','🦊','🐶','🐯','🐨','🐸','🐹'];
+const AVATAR_COLORS = ['#ffd6e8','#d4f7ec','#d9ecff','#ecdcff','#ffe2cc','#fff3c4'];
+const dateAdd = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+
+/* ===== 主题配色 ===== */
+const THEMES = {
+  sakura:    { name: '樱粉', pink: '#ff7eb3', deep: '#ff5fa2', orange: '#ff924c' },
+  berry:     { name: '莓紫', pink: '#b083f5', deep: '#8b5cf6', orange: '#ff8fab' },
+  ocean:     { name: '海蓝', pink: '#6db6ff', deep: '#4d9bff', orange: '#6bdcb7' },
+  mint:      { name: '薄荷', pink: '#6bdcb7', deep: '#2aa583', orange: '#ffd93d' },
+  tangerine: { name: '蜜橘', pink: '#ff924c', deep: '#ff6b35', orange: '#ffd93d' },
+};
+function hexToRgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map((c) => c + c).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function shade(hex, p) { const [r, g, b] = hexToRgb(hex); const mix = (c) => { const v = Math.round(p < 0 ? c * (1 + p) : c + p * (255 - c)); return ('0' + Math.max(0, Math.min(255, v)).toString(16)).slice(-2); }; return '#' + [r, g, b].map(mix).join(''); }
+function applyTheme(key) {
+  let t;
+  if (key && THEMES[key]) t = THEMES[key];
+  else if (/^#/.test(key || '')) t = { pink: key, deep: shade(key, -0.12), orange: shade(key, 0.25) };
+  else t = THEMES.sakura;
+  const root = document.documentElement.style;
+  root.setProperty('--pink', t.pink);
+  root.setProperty('--pink-deep', t.deep);
+  root.setProperty('--orange', t.orange);
+  root.setProperty('--pink-soft', shade(t.pink, 0.62));
+  root.setProperty('--pink-bg', shade(t.pink, 0.80));
+}
+function renderTheme() {
+  const row = $('#themeRow'); if (!row) return;
+  row.innerHTML = Object.entries(THEMES).map(([k, v]) => `<button class="theme-chip ${DB.theme === k ? 'active' : ''}" data-theme="${k}" style="background:linear-gradient(135deg,${v.pink},${v.orange})" title="${v.name}"></button>`).join('')
+    + `<button class="theme-chip ${/^#/.test(DB.theme || '') ? 'active' : ''}" data-theme="__custom" style="background:conic-gradient(#ff7eb3,#b083f5,#6bdcb7,#ff924c,#ff7eb3)" title="自定义">🎨</button>`;
+  $$('#themeRow [data-theme]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.theme;
+    if (k === '__custom') { const c = $('#themeCustom').value; DB.theme = c; applyTheme(c); }
+    else { DB.theme = k; applyTheme(k); }
+    save(); renderTheme(); toast('已换上专属配色 🎨');
+  }));
+  if (/^#/.test(DB.theme || '')) $('#themeCustom').value = DB.theme;
+}
+
+function load() {
+  try {
+    const r = localStorage.getItem(STORE_KEY);
+    if (r) {
+      Object.assign(DB, JSON.parse(r));
+      // 兜底：保证新增字段存在，避免旧版数据缺字段报错（更新后原数据全部保留）
+      DB.usedCodes = DB.usedCodes || [];
+    }
+  } catch (e) {}
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); } catch (e) { console.warn('本地存储不可用，数据不会保存：', e); } }
+
+let toastTimer;
+let deferredPrompt = null;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1800); }
+
+/* ===== 每日激励（中文+英文，按日期更新） ===== */
+const QUOTES = [
+  { cn: '今天的你，比昨天的你更白一点点', en: 'You are a little brighter than yesterday.' },
+  { cn: '坚持喝美白饮，发光的是你自己', en: 'Keep drinking your glow drink, you are the light.' },
+  { cn: '每个宝宝都在悄悄变美，你也是', en: 'Every baby is glowing quietly, and so are you.' },
+  { cn: '别让熬夜偷走你的好气色', en: 'Do not let late nights steal your glow.' },
+  { cn: '防晒加美白饮，是白到发光的秘密', en: 'Sunscreen plus glow drink is the secret to radiant skin.' },
+  { cn: '你递出的不只是饮品，是自信', en: 'What you give is not just a drink, but confidence.' },
+  { cn: '慢慢来，皮肤记得你的每一次坚持', en: 'Slow and steady, your skin remembers every effort.' },
+  { cn: '今天也要对着镜子笑一个哦', en: 'Give the mirror a smile today.' },
+  { cn: '把温柔给客户，把漂亮留给自己', en: 'Be gentle to clients, keep beauty for yourself.' },
+  { cn: '胶原补到位，素颜也敢抬头走', en: 'With collagen on point, bare face, head held high.' },
+  { cn: '好状态是喝出来的，加油鸭', en: 'Great skin is sipped, keep going.' },
+  { cn: '你负责努力，时间负责变白', en: 'You do the work, time does the whitening.' },
+  { cn: '每个小习惯，都是未来更白的自己', en: 'Every small habit is a brighter you.' },
+  { cn: '精气神够了，整个人都在发光', en: 'With good energy, you shine all over.' },
+  { cn: '别急，美是长期主义的事', en: 'No rush, beauty is a long game.' },
+  { cn: '你比自己以为的更接近美好', en: 'You are closer to beauty than you think.' },
+  { cn: '相信积累的力量，时间会给你惊喜', en: 'Trust accumulation, time will surprise you.' },
+  { cn: '今天的努力，明天会看得见', en: 'Today\'s effort will show tomorrow.' },
+  { cn: '你种的自律，都会开花结果', en: 'The discipline you plant will bloom.' },
+  { cn: '慢慢变好，是最好的人生节奏', en: 'Getting better slowly is the best rhythm of life.' },
+  { cn: '别慌，一切都在变好的路上', en: 'Do not panic, everything is getting better.' },
+  { cn: '你要相信，所有的美好都在来的路上', en: 'Believe that all good things are on the way.' },
+  { cn: '生活会越来越好的，你也是', en: 'Life will get better, and so will you.' },
+  { cn: '日子会越过越亮，你也会越来越好', en: 'Days will get brighter, and so will you.' },
+  { cn: '往后的日子，白白净净，顺顺当当', en: 'The days ahead, clean and bright, smooth and steady.' },
+  { cn: '你值得一切温柔与美好', en: 'You deserve all tenderness and beauty.' },
+  { cn: '把期待放在自己身上，最踏实', en: 'Putting hope in yourself is the surest thing.' },
+  { cn: '你本来就很美，只是需要时间显形', en: 'You are already beautiful, just need time to show.' },
+  { cn: '今天的白，是昨天的坚持换来的', en: 'Today\'s brightness comes from yesterday\'s persistence.' },
+  { cn: '别怕慢，怕的是停', en: 'Do not fear slow, fear stopping.' },
+  { cn: '你认真生活的样子，比滤镜好看', en: 'Your serious way of living beats any filter.' },
+  { cn: '把焦虑留给昨夜，把发光留给自己', en: 'Leave anxiety to last night, keep the glow for yourself.' },
+  { cn: '你现在的坚持，是将来惊艳的资本', en: 'Your persistence now is the capital to shine later.' },
+  { cn: '每天一杯，白得踏实', en: 'One cup a day, whitening with peace of mind.' },
+  { cn: '你流的汗，皮肤都记得', en: 'Your skin remembers every drop of sweat.' },
+  { cn: '慢慢来，比较快', en: 'Slow is faster.' },
+  { cn: '别和别人比，和昨天的自己比', en: 'Compare with yesterday\'s self, not others.' },
+  { cn: '你正在悄悄变好，世界会看见', en: 'You are quietly getting better, the world will see.' },
+  { cn: '把平凡日子过出仪式感', en: 'Make ordinary days feel like a ritual.' },
+  { cn: '你负责坚持，宇宙负责送美好', en: 'You persist, the universe sends beauty.' },
+  { cn: '今天的漂亮，是喝出来的', en: 'Today\'s beauty is sipped.' },
+  { cn: '别让犹豫拖慢变美的脚步', en: 'Do not let hesitation slow your glow.' },
+  { cn: '你付出的每一分，时间都加倍还', en: 'Time repays every bit you give, doubled.' },
+  { cn: '早安，正在发光的女孩', en: 'Morning, glowing girl.' },
+  { cn: '你的光，不需要别人批准', en: 'Your light needs no one\'s approval.' },
+  { cn: '把美白饮喝成信仰', en: 'Drink your glow as a belief.' },
+  { cn: '你比想象中更靠近理想自己', en: 'You are closer to your ideal self than you think.' },
+  { cn: '今天的努力很贵，但值', en: 'Today\'s effort is pricey, but worth it.' },
+  { cn: '别小看每天的这一杯，是变美复利', en: 'Do not underestimate this daily cup, it is compounding beauty.' },
+  { cn: '你值得被好好对待', en: 'You deserve to be treated well.' },
+  { cn: '把温柔给自己，从一杯开始', en: 'Be gentle to yourself, starting with one cup.' },
+  { cn: '生活会越来越好，像你的皮肤', en: 'Life gets better, like your skin.' },
+  { cn: '你坚持的样子，比结果动人', en: 'Your persistence is more touching than the result.' },
+  { cn: '别怕起点低，怕不开始', en: 'Do not fear a low start, fear not starting.' },
+  { cn: '今天的白，是明天自信的底气', en: 'Today\'s brightness is tomorrow\'s confidence.' },
+  { cn: '你本来就是宝藏，需要胶原来擦亮', en: 'You are a treasure, collagen just polishes it.' },
+  { cn: '把每一天过成限量版', en: 'Live every day like a limited edition.' },
+  { cn: '你负责发光，其余交给时间', en: 'You shine, leave the rest to time.' },
+  { cn: '别焦虑进度，皮肤有自己的节奏', en: 'Do not anxiety about pace, skin has its own rhythm.' },
+  { cn: '你正在变好的路上，别回头', en: 'You are on the way to better, do not look back.' },
+  { cn: '今天的透亮，是明天惊艳的入场券', en: 'Today\'s clarity is tomorrow\'s stunning ticket.' },
+  { cn: '你流的泪，都会变成透亮的光', en: 'Your tears will turn into clear light.' },
+  { cn: '把期待调成静音，把坚持调到最大', en: 'Mute the expectations, max the persistence.' },
+  { cn: '你值得白到发光的人生', en: 'You deserve a life glowing bright.' },
+  { cn: '慢慢喝，慢慢白，生活也温柔', en: 'Drink slowly, whiten slowly, life gets gentle too.' },
+  { cn: '你比自己以为的更努力', en: 'You work harder than you think.' },
+  { cn: '今天的努力，皮肤和时间为证', en: 'Today\'s effort, witnessed by skin and time.' },
+  { cn: '别被别人节奏带跑，你有自己的时区', en: 'Do not follow others\' pace, you have your own time zone.' },
+  { cn: '你正在悄悄变美，朋友会先发现', en: 'You are quietly beautifying, friends will notice first.' },
+  { cn: '把美白饮喝成日常，把好运喝成习惯', en: 'Drink glow daily, drink luck as habit.' },
+  { cn: '你今天的自律，是明天被夸白的底气', en: 'Today\'s discipline is tomorrow\'s praised glow.' },
+  { cn: '愿我们白白净净，也事事顺心', en: 'May we be clean and bright, and all goes well.' },
+  { cn: '你负责的每一分，都在雕刻更美自己', en: 'Every effort you own is sculpting a prettier you.' },
+  { cn: '别让将就偷走你的漂亮', en: 'Do not let compromise steal your beauty.' },
+  { cn: '你现在的每一杯，都在给未来写情书', en: 'Every cup now writes a love letter to the future.' },
+  { cn: '早安，正在变好的路上给自己鼓掌', en: 'Morning, applaud yourself on the way to better.' },
+  { cn: '你付出的坚持，时间都加倍还给你', en: 'Time repays your persistence doubled.' },
+  { cn: '世界和你的皮肤，都在越来越好', en: 'The world and your skin are both getting better.' },
+  { cn: '你不需要完美，只要比昨天的自己好一点', en: 'You need not be perfect, just a bit better than yesterday.' },
+  { cn: '把昨天的疲惫清零，今天从一杯开始', en: 'Clear yesterday\'s fatigue, start today with one cup.' },
+  { cn: '你坚持的意义，是未来感谢现在', en: 'The meaning of persistence is future thanking now.' },
+  { cn: '今天的透亮，是明天自信的入场券', en: 'Today\'s clarity is tomorrow\'s confidence ticket.' },
+  { cn: '别被别人带跑，你有自己的变美时区', en: 'Do not be led astray, you have your own glow time zone.' },
+  { cn: '你值得所有美好，包括白到发光', en: 'You deserve all beauty, including glowing white.' },
+  { cn: '慢慢来，美好会按节奏到来', en: 'Take it slow, beauty arrives on schedule.' },
+  { cn: '你今天的每一分自律，都是明天底气', en: 'Today\'s discipline is tomorrow\'s confidence.' },
+  { cn: '早安，愿你我都被温柔以待', en: 'Morning, may we both be treated gently.' },
+  { cn: '你流的每一滴汗，都在雕刻更美的你', en: 'Every drop of sweat sculpts a prettier you.' },
+  { cn: '把美白饮当早安礼物送自己', en: 'Give yourself glow drink as a morning gift.' },
+  { cn: '你正在发光，比昨天的你更亮', en: 'You are glowing, brighter than yesterday\'s you.' },
+  { cn: '别停，再喝一天，离惊艳近一点', en: 'Do not stop, one more day, closer to stunning.' },
+  { cn: '今天的白，由你定义', en: 'Today\'s brightness is defined by you.' },
+  { cn: '你负责的努力，时间都记着', en: 'Time remembers the effort you own.' },
+  { cn: '把日子过成自己喜欢的样子', en: 'Live life the way you like.' },
+  { cn: '你正在变好的证据，写在脸上', en: 'The proof of your bettering is on your face.' },
+  { cn: '别怕慢，怕的是不开始这一杯', en: 'Do not fear slow, fear not starting this cup.' },
+  { cn: '你值得被自己好好喝一杯', en: 'You deserve a good cup from yourself.' },
+  { cn: '今天的漂亮是自己的，自信也是', en: 'Today\'s beauty is yours, so is confidence.' },
+  { cn: '你正在把生活过成诗意', en: 'You are turning life into poetry.' },
+  { cn: '别让将就偷走发光的机会', en: 'Do not let compromise steal your glow chance.' },
+  { cn: '你现在的坚持，是将来被夸白的伏笔', en: 'Your persistence now is the setup for future praise.' },
+  { cn: '早安，愿你的坚持都有回响', en: 'Morning, may your persistence echo.' },
+  { cn: '你比想象中更接近冷白皮', en: 'You are closer to fair skin than you think.' },
+  { cn: '把焦虑泡进美白饮里喝掉', en: 'Steep anxiety in glow drink and drink it.' },
+  { cn: '你今天的每一杯，都是变美复利', en: 'Every cup today is compounding beauty.' },
+  { cn: '别慌张，所有的好按节奏到来', en: 'Do not panic, all good arrives on rhythm.' },
+  { cn: '你正在悄悄变美，世界会看见你的光', en: 'You are quietly beautifying, the world will see your light.' },
+  { cn: '你每一天的坚持，都在攒那句你最近好白', en: 'Every day\'s persistence saves for that you look so white.' },
+  { cn: '你负责的坚持，时间加倍还', en: 'Time repays your persistence doubled.' },
+  { cn: '早安，愿我们都被生活温柔相待', en: 'Morning, may life treat us gently.' },
+  { cn: '你付出的每一分，都在变好的路上', en: 'Every bit you give is on the way to better.' },
+  { cn: '你本来就是光，只是需要透亮来显形', en: 'You are light, just need clarity to show.' },
+  { cn: '把美白饮喝成习惯，把漂亮喝成日常', en: 'Drink glow as habit, beauty as daily.' },
+  { cn: '你今天的努力，明天会被夸', en: 'Today\'s effort will be praised tomorrow.' },
+  { cn: '别怕起点低，每一杯都是起点', en: 'Do not fear low start, every cup is a start.' },
+  { cn: '你正在变好，而且会越来越好', en: 'You are getting better, and will get even better.' },
+  { cn: '今天的白，是给明天自己的情书', en: 'Today\'s brightness is a love letter to tomorrow\'s self.' },
+  { cn: '你值得一切慢慢变好的运气', en: 'You deserve all the luck of slowly getting better.' },
+  { cn: '把发光留给自己，今天就开始', en: 'Keep the glow for yourself, start today.' },
+  { cn: '你负责的每一分坚持，都算数', en: 'Every bit of persistence you own counts.' },
+  { cn: '早安，正在发光的你比昨天的你更值得喜欢', en: 'Morning, glowing you is more likable than yesterday\'s you.' },
+  { cn: '你正在把普通日子过成限量版', en: 'You are turning ordinary days into limited editions.' },
+  { cn: '别让犹豫偷走变美的勇气', en: 'Do not let hesitation steal your glow courage.' },
+  { cn: '你今天的白，是明天自信的底气', en: 'Today\'s brightness is tomorrow\'s confidence.' },
+  { cn: '你本来就很宝藏，胶原蛋白来擦亮', en: 'You are a treasure, collagen polishes it.' },
+  { cn: '把每一天都过成自己喜欢的样子', en: 'Live every day the way you like.' },
+  { cn: '你正在变好的路上，记得给自己鼓掌', en: 'On the way to better, remember to applaud yourself.' },
+  { cn: '你流的每一滴汗，喝的每一杯，都算', en: 'Every drop of sweat, every cup, all count.' },
+  { cn: '别怕慢，怕的是停在这一杯前', en: 'Do not fear slow, fear stopping before this cup.' },
+  { cn: '你值得白到发光，也值得被爱', en: 'You deserve glowing white, and to be loved.' },
+  { cn: '今天的努力很贵，但未来的你会说值', en: 'Today\'s effort is pricey, future you will say worth it.' },
+  { cn: '你正在悄悄变美，连自己都会惊讶', en: 'You are quietly beautifying, even yourself surprised.' },
+  { cn: '把美白饮喝成信仰，把变白喝成日常', en: 'Drink glow as faith, whitening as daily.' },
+  { cn: '你负责的坚持，时间都看得见', en: 'Time sees the persistence you own.' },
+  { cn: '早安，愿你的生活像皮肤一样越来越透亮', en: 'Morning, may your life be clearer like your skin.' },
+  { cn: '你正在变好，而且会越来越好，真的', en: 'You are getting better, and will be even better, truly.' },
+];
+function showQuote() {
+  const seed = parseInt(todayStr().replace(/-/g, ''), 10);
+  const q = pick(QUOTES, seed);
+  $('#encourageCn').textContent = q.cn;
+  $('#encourageEn').textContent = q.en;
+}
+function rerollQuote() { const q = pick(QUOTES, Math.floor(Math.random() * QUOTES.length)); $('#encourageCn').textContent = q.cn; $('#encourageEn').textContent = q.en; }
+
+/* ===== 老板版：今日朋友圈打卡语（按日期生成，每天一条） ===== */
+
+const WOMEN = [
+  '你不需要成为谁的标准答案，你本来就很闪耀。',
+  '女孩子最好的嫁妆，是自己挣来的底气。',
+  '把温柔留给自己一点，你值得被好好对待。',
+  '越来越好的路上，允许自己慢慢来。',
+  '你的价值不靠别人定义，自己说了算。',
+  '经济独立，是女人最大的体面。',
+  '愿你既有软肋，也有铠甲。',
+  '别怕起点低，敢走的人已经在路上了。',
+  '好好爱自己，是世界上最划算的投资。',
+  '你努力的样子，比任何滤镜都好看。',
+  '不依附、不讨好，做自己生活的主人。',
+  '今天的辛苦，都是明天闪闪发光的铺垫。',
+  '女孩子也可以又飒又温柔，不必二选一。',
+  '你的花期不同，不必和别人比着开。',
+  '会赚钱的女孩，连拒绝都更有底气。',
+  '别用别人的尺子，量自己的人生。',
+  '越来越好不是口号，是每天多做一点的坚持。',
+  '你不必完美，但一定要真实。',
+  '存款和本事，才是女人最好的安全感。',
+  '想做的事现在就做，别等"准备好了"。',
+  '你的善良要带点锋芒，才不会被辜负。',
+  '独立不是不依赖，而是有选择的权利。',
+  '把日子过成自己喜欢的样子，就是成功。',
+  '别让"女孩子嘛"限制了你能到达的高度。',
+  '你笑起来的样子，比任何妆容都动人。',
+  '努力变强，是为了有底气说"不"。',
+  '会越来越好的，只要你没放弃自己。',
+  '女人最美的年纪，是清醒又自由的现在。',
+  '别怕单身，一个人也能把日子过得风生水起。',
+  '你的想法很贵，别轻易打折。',
+  '会发光的女孩，从不靠谁照亮。',
+  '先学会爱自己，再去爱世界。',
+  '别把委屈吞进肚子，你的情绪也很重要。',
+  '你的人生剧本，主角只能是你自己。',
+  '赚钱的能力，是女人最硬的底牌。',
+  '与其等风来，不如自己成为风。',
+  '你不必讨好所有人，悦己才是终身浪漫。',
+  '越来越好的秘密，是持续更新的自己。',
+  '别让年龄成为借口，每个阶段都有光。',
+  '有能力说"我养你"，也有底气说"我养自己"。',
+  '你的底线，决定别人对你的态度。',
+  '女孩也要有棱角，温柔不等于好欺负。',
+  '把时间花在成长上，而不是内耗上。',
+  '你值得被认真对待，包括被自己。',
+  '独立搞钱搞事业，才是顶级的性感。',
+  '别怕试错，弯路也是风景的一部分。',
+  '你现在的努力，是给未来的自己撑腰。',
+  '女孩子的前途，不该被婚姻定义。',
+  '自律给你自由，努力给你选择。',
+  '你的故事还没写完，别急着给自己剧终。',
+  '会越来越好的，所有的好都在来的路上。',
+  '不依附谁的光，自己就是太阳。',
+  '你要有赚钱的本事，也要有离开的勇气。',
+  '别用将就换安稳，你值得更好的生活。',
+  '女人最酷的时刻，是掌控自己人生的样子。',
+  '你的快乐，不该建立在别人的认可上。',
+  '慢慢变好，是给自己最好的交代。',
+  '别让任何人，替你决定该怎么活。',
+  '你努力赚钱的样子，比等谁接送都帅。',
+  '独立不是孤独，是清醒地选择同行。',
+  '你的价值，从不因结婚生子而增减。',
+  '会越来越好的，请相信积累的力量。',
+  '女孩也要有野心，那不是错是生命力。',
+  '别把人生寄托在别人身上，靠山山会倒。',
+  '你值得拥有钱、爱与自由，三者都要。',
+  '别怕被说"太要强"，要强才能护住自己。',
+  '你的底气，来自银行卡和脑子里装的东西。',
+  '慢慢来，你正在成为更喜欢的自己。',
+  '女人最顶级的魅力，是经济和精神双独立。',
+  '别等被爱，先学会自己宠自己。',
+  '你的人生是你自己的，关别人什么事。',
+  '会越来越好的，每一次坚持都有回响。',
+  '你不必懂事到委屈自己，学会拒绝。',
+  '把精力留给值得的人和事，其他的随它去。',
+  '你赚钱的样子，比任何情话都实在。',
+  '别让情绪内耗你，把能量留给成长。',
+  '独立女性的浪漫，是自己买单的爽快。',
+  '你的未来，藏在现在的每一个选择里。',
+  '会越来越好的，时间从不辜负认真的人。',
+  '别用别人的期待，绑架自己的人生。',
+  '你要有随时重新开始的勇气。',
+  '女孩的前途光明，靠自己点亮。',
+  '你的努力，是为了有资格说"我愿意"。',
+  '别怕慢，怕的是停在原地。',
+  '你值得被爱，也值得被好好尊重。',
+  '经济独立的女人，连吵架都有底气。',
+  '会越来越好的，所有美好都值得等待。',
+  '你的人生你做主，别人只配旁观。',
+  '别把青春耗在等待上，去创造去拥有。',
+  '你要有自己的事业，也有自己的远方。',
+  '独立不是口号，是每天实实在在的底气。',
+  '你的光芒，不该被任何人遮住。',
+  '别怕一个人，孤独是变强的必修课。',
+  '你会越来越好，因为你不曾真正放弃。',
+  '女人最好的首饰，是能力和自信。',
+  '别让"合适"困住你，去追真正想要的。',
+  '你值得拥有一份，自己说了算的人生。',
+  '会越来越好的，今天的每一步都算数。',
+  '你不必合群，出众也是一种活法。',
+  '把喜欢的事做到极致，就是你的王牌。',
+  '你的底线越清晰，世界对你越客气。',
+  '别用身材焦虑定义自己，健康最美。',
+  '你努力的样子，就是孩子最好的榜样。',
+  '会越来越好的，所有坚持终将开花。',
+  '女人要活得清醒，也要活得尽兴。',
+  '你要有钱、有爱、有热爱，一样都不能少。',
+  '别等被需要才证明价值，你本身就珍贵。',
+  '你的征途是星辰大海，不止厨房与爱。',
+  '独立搞钱的女孩，连空气都透着洒脱。',
+  '会越来越好的，你比想象中更有力量。',
+  '别让任何人定义你的成功，你定标准。',
+  '你要的都去争取，不靠运气靠自己。',
+  '你的底气，是夜深人静时也不慌的张。',
+  '别怕重来，你带走的本事谁也拿不走。'
+];
+
+const MOMENTS = [
+  '🌞 早安呀～今天的仪式感从一杯温温的胶原蛋白美白饮开始，白到发光是每天偷偷努力的证据。',
+  '又是被自己美醒的一天。喝完美白饮出门，连阳光都变得温柔了。',
+  '自律的人已经喝上早上的美白饮啦，你呢？坚持第 N 天，皮肤肉眼可见在变透亮。',
+  '☀️ 早上这杯美白饮，是我对皮肤最温柔的承诺。慢慢来，白是长期主义的事。',
+  '今日份元气满满！一杯美白饮下肚，整个人都在发光，姐妹们早呀。',
+  '防晒涂好、美白饮喝上，今天的漂亮就稳了。早安，努力变美的你最可爱。',
+  '🥛 晨起第一件事：给皮肤喝点胶原。坚持喝，素颜也敢抬头挺胸走路。',
+  '早上的阳光和美白饮最配了，把坚持变成习惯，把习惯变成更白的自己。',
+  '不喝美白饮的早晨是不完整的，今日份白嫩续杯成功，一起做发光女孩。',
+  '🌞 新的一天，新的美白 KPI，这杯下肚离冷白皮又近一步啦。',
+  '早安世界，一杯美白饮，半分自律半分爱自己。你今天也对镜子笑了吗？',
+  '偷偷告诉你，变白真的有捷径——每天那杯美白饮别断，早安打卡 Day+1。',
+  '☀️ 阳光刚好，美白饮刚好，心情刚好。认真生活的女孩子最好看。',
+  '晨起打卡完成，美白饮已安排。把温柔给自己，把漂亮留给镜头。',
+  '今天的漂亮额度已充值，一杯胶原美白饮开启透亮一整天。',
+  '早呀姐妹们，美白饮喝完啦，去迎接属于我的发光时刻。',
+  '🌿 慢生活，快变白。早上这杯美白饮，是独处也是充电。',
+  '坚持喝美白饮的第 N 天，朋友说我最近在发光是认真的。早安。',
+  '把美白饮当成早安吻，每天给自己一点变好的仪式感。',
+  '别急着要结果，皮肤记得你每一次的坚持，它会慢慢还给你。',
+  '今天的你比昨天的你更白一点点，这就是坚持的意义。',
+  '每一个认真护肤的早晨，都是在为更美的自己铺垫。',
+  '好状态是喝出来的，胶原补到位，素颜也敢抬头走。',
+  '你负责努力，时间负责把你变白，剩下的交给坚持。',
+  '每个小习惯，都是未来更白更自信的自己。',
+  '精气神够了，整个人都在发光，今天也要支棱起来。',
+  '别让熬夜偷走你的好气色，早起一杯美白饮补回来。',
+  '防晒加美白饮，等于白到发光的秘密公式。',
+  '你递出的不只是饮品，是让客户更自信的底气。',
+  '把温柔给客户，把漂亮留给自己，做生意也要美美的。',
+  '今天的努力会很贵，但将来的你会感谢现在坚持喝的自己。',
+  '慢慢变美，慢慢变好，一切都在来的路上。',
+  '别急，美好正在赶来的路上，你只管坚持就好。',
+  '相信积累的力量，今天的每一杯都在为白里透亮存钱。',
+  '你种的每一份自律，都会开花结果，在脸上看得见。',
+  '早安，正在变好的你。今天的白，是昨天的坚持换来的。',
+  '生活会越来越好的，就像你的皮肤会一天比一天亮。',
+  '你要相信，所有的美好都在来的路上，一切都会越来越好。',
+  '别慌，日子会越过越亮，你也会越来越好。',
+  '往后的日子，白白净净，顺顺当当，越来越好。',
+  '再小的坚持也有回响，今天的白是明天更美的铺垫。',
+  '把焦虑留给昨夜，把发光留给自己，新的一天冲呀。',
+  '你本来就很美，只是需要一点时间和胶原来显形。',
+  '早安，记得喝美白饮，也记得对自己好一点。',
+  '今天也要做自己的小太阳，照亮自己也让别人羡慕。',
+  '变美没有捷径，但坚持是最短的路，早安打卡。',
+  '皮肤不会骗人，你付出多少它就回报多少亮度。',
+  '把美白饮喝成习惯，把漂亮喝成日常。',
+  '今天的你，比想象中更接近理想中的自己。',
+  '早安，正在发光的女孩。今天的白，由你定义。',
+  '一杯下肚，开启透亮模式，今天也要闪闪惹人爱。',
+  '别和别人比，和昨天的自己比，你已经在变好了。',
+  '坚持喝，慢慢白，稳稳幸福，这就是长期主义的美。',
+  '你现在的每一分坚持，都是将来惊艳他们的资本。',
+  '早安，愿你我都被岁月温柔以待，一天比一天透亮。',
+  '把平凡的日子过出仪式感，从一杯美白饮开始。',
+  '今天的漂亮是喝出来的，明天的自信也是。',
+  '别怕慢，怕的是停。每天一杯，白得踏实。',
+  '你认真生活的样子，比任何滤镜都好看。',
+  '早安，今天也要对得起镜子里那个努力的自己。',
+  '胶原补上，气色拉满，素颜出门也自带高光。',
+  '变白是场马拉松，你已经在跑道上，就很棒。',
+  '把期待放在自己身上，你会越来越好，真的。',
+  '今天的努力，时间都记着，它会用透亮回报你。',
+  '早安，正在变好的路上，别回头，前面更亮。',
+  '你值得一切美好的事物，包括白到发光的自己。',
+  '把美白饮当早安礼物送给自己，爱自己从一杯开始。',
+  '别让犹豫拖慢变美的脚步，今天就开始喝。',
+  '每坚持一天，就离冷白皮近一步，继续呀。',
+  '早安，愿你的生活像你的皮肤一样，越来越透亮。',
+  '你流的每一滴汗、喝的每一杯，都在雕刻更美的你。',
+  '慢慢来，比较快。美白如此，生活也如此。',
+  '今天的白是给明天自己的情书，记得拆。',
+  '别焦虑进度，皮肤有自己的节奏，你只需坚持。',
+  '早安，正在发光的你，比昨天的你更值得喜欢。',
+  '把日子过成自己喜欢的样子，从一杯美白饮的仪式感起。',
+  '你现在的坚持，是将来被夸白到发光的伏笔。',
+  '今天的漂亮额度已满，去闪闪发光吧。',
+  '别小看每天的这一杯，它是变美的复利。',
+  '早安，愿我们都被生活温柔相待，越来越好。',
+  '你负责坚持，宇宙负责把美好送到你面前。',
+  '把美白饮喝成信仰，把变白喝成日常。',
+  '今天的你比昨天的你更靠近冷白皮一点，棒。',
+  '别慌张，所有的好都在按节奏到来，包括更白的你。',
+  '早安，正在悄悄变美的女孩，世界会看见你的光。',
+  '你每一天的坚持，都在为那句“你最近好白”攒素材。',
+  '把焦虑泡进美白饮里喝掉，今天只管发光。',
+  '今天的努力是很贵的，但未来的你会说值。',
+  '早安，愿你往后的日子白白净净，顺顺当当。',
+  '你本来就是宝藏，只是需要胶原来擦亮。',
+  '别停，再喝一天，白一点，离惊艳近一点。',
+  '今天的白，是明天自信的底气，继续冲。',
+  '早安，正在把生活过成诗意的你，皮肤也在写诗。',
+  '你坚持的样子，比结果更动人，慢慢来。',
+  '把每一天都过成限量版，从认真喝美白饮开始。',
+  '今天的漂亮是自己的，明天的自信也是自己的。',
+  '别怕起点低，怕的是不开始。今天这杯，就是起点。',
+  '早安，愿你我都被温柔以待，一天比一天更亮更暖。',
+  '你付出的每一分坚持，时间都会加倍还给你，越来越好。',
+  '早安，世界和你的皮肤一样，正在变得越来越好，一起加油。',
+  '把昨天的疲惫清零，今天的白从这一杯开始。',
+  '你不需要完美，只需要比昨天的自己更努力一点点。',
+  '早安，今天也要把温柔和漂亮都留给自己。',
+  '坚持的意义，是让未来的自己感谢现在的决定。',
+  '今天的透亮，是明天自信的入场券，喝起来。',
+  '别被别人的节奏带跑，你有自己的变美时区。',
+  '早安，正在悄悄变好的你，值得所有美好。',
+  '把美白饮喝成日常，把好运喝成习惯。',
+  '你今天的每一分自律，都是明天被夸白的底气。',
+  '早安，愿我们都能白白净净，也都能事事顺心。',
+  '慢慢喝，慢慢白，生活也会慢慢对你温柔。',
+  '你比自己以为的更接近美好，别放弃。',
+  '今天的努力不会白费，皮肤和时间都看得见。',
+  '早安，正在发光的女孩，今天也要照亮自己。',
+  '把期待调成静音，把坚持调到最大，剩下的交给时间。',
+  '你值得被好好对待，包括被自己好好喝一杯美白饮。',
+  '今天的白是积累出来的，明天的惊艳也是。',
+  '早安，愿你的坚持都有回响，你的白都有人懂。',
+  '别让将就偷走你的漂亮，每天这杯必须安排。',
+  '你现在的每一杯，都是在给未来的自己写情书。',
+  '早安，正在变好的路上，记得给自己鼓个掌。',
+];
+function renderMoment() {
+  const panel = $('#momentPanel'); if (!panel) return;
+  if (APP_MODE !== 'owner') { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const seed = parseInt(todayStr().replace(/-/g, ''), 10);
+  $('#momentText').textContent = pick(MOMENTS, seed);
+  const wd = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][new Date().getDay()];
+  $('#momentDate').textContent = '📅 ' + (new Date().getMonth() + 1) + '月' + new Date().getDate() + '日 · ' + wd;
+}
+function rerollMoment() {
+  $('#momentText').textContent = pick(MOMENTS, Math.floor(Math.random() * MOMENTS.length));
+  $('#momentDate').textContent = '🎲 随手一条灵感';
+}
+function copyMoment() {
+  const t = $('#momentText').textContent;
+  const done = () => toast('已复制，去朋友圈粘贴吧 📋');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done) {
+  const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，请手动长按选择 📋'); }
+  document.body.removeChild(ta);
+}
+
+/* ===== 首页：女神励志语录（按日期生成，每天一条，老板/朋友版均可见） ===== */
+function renderWomen() {
+  const panel = $('#womenPanel'); if (!panel) return;
+  const seed = parseInt(todayStr().replace(/-/g, ''), 10);
+  $('#womenText').textContent = pick(WOMEN, seed);
+  const wd = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][new Date().getDay()];
+  $('#womenDate').textContent = '💪 ' + (new Date().getMonth() + 1) + '月' + new Date().getDate() + '日 · ' + wd;
+}
+function rerollWomen() {
+  $('#womenText').textContent = pick(WOMEN, Math.floor(Math.random() * WOMEN.length));
+  $('#womenDate').textContent = '🎲 随手一条 inspiration';
+}
+function copyWomen() {
+  const t = $('#womenText').textContent;
+  const done = () => toast('已复制，去给自己打气吧 💪');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+
+/* ===== 时钟 ===== */
+function tickClock() {
+  const n = new Date(); const p = (x) => String(x).padStart(2, '0');
+  $('#clockTime').textContent = `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  const wk = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][n.getDay()];
+  $('#clockDate').textContent = `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日`;
+  $('#clockWeek').textContent = wk;
+  const dp = $('#dailyDatePill'); if (dp) dp.textContent = `${n.getMonth()+1}月${n.getDate()}日 · ${wk}`;
+  const cp = $('#checkinDatePill'); if (cp) cp.textContent = `${n.getMonth()+1}月${n.getDate()}日 · ${wk}`;
+}
+
+/* ===== 飘落萌宠 ===== */
+function initPetRain() {
+  const box = $('#petRain'); const pets = ['🐾','🌸','⭐','🍊','💗','🐰','🐱'];
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('span'); s.textContent = pets[i % pets.length];
+    s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = (18 + Math.random() * 14) + 'px';
+    s.style.animationDuration = (8 + Math.random() * 10) + 's'; s.style.animationDelay = (-Math.random() * 12) + 's';
+    box.appendChild(s);
+  }
+}
+
+/* ===== 导航 ===== */
+function initNav() {
+  $$('.nav-item').forEach((b) => b.addEventListener('click', () => {
+    const page = b.dataset.page;
+    $$('.nav-item').forEach((x) => x.classList.toggle('active', x === b));
+    $$('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-' + page));
+    ({ home: renderHome, customers: renderCustomers, checkin: renderCheckin, daily: renderDaily, todo: renderTodos, shipping: renderShipping, summary: renderSummary, inventory: renderInventory, followup: renderFollowups, knowledge: renderKnowledge, settings: renderSettings }[page] || (()=>{}))();
+    window.scrollTo(0, 0);
+  }));
+}
+function toggleNav() {
+  const app = $('.app'); const collapsed = app.classList.toggle('nav-collapsed');
+  const btn = $('#navToggle'); if (btn) btn.textContent = collapsed ? '»' : '«';
+  try { localStorage.setItem('meibai_nav_collapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+function initPWA() {
+  // 仅老板版支持“安装到桌面”：分享版（试用）若被安装，start_url 根路径会绕过 7 天试用
+  if (APP_MODE !== 'owner') return;
+  // 注册 Service Worker：仅 http(s) 环境（本地 file:// 打开会静默失败）
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  }
+  // 捕获原生“安装到桌面”提示（Android Chrome）
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    const hint = $('#ibHint'); if (hint) hint.textContent = '点下面按钮，把工作台装到手机桌面';
+    const ib = $('#ibInstall'); if (ib) ib.style.display = '';
+    const banner = $('#installBanner');
+    if (banner && !localStorage.getItem('installHintSeen')) banner.classList.add('show');
+  });
+  // iOS 用 Safari“添加到主屏幕”；已安装的独立窗口不再提示
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if (standalone) { const b = $('#installBanner'); if (b) b.classList.remove('show'); }
+}
+const switchTo = (page) => $(`.nav-item[data-page="${page}"]`).click();
+
+/* ===== 首页 ===== */
+function renderHome() {
+  const custCount = DB.customers.length;
+  const pendingShip = DB.shippings.filter((s) => s.status === '待发货').length;
+  const activeTodo = DB.todos.filter((t) => !t.done).length;
+  const totalBoxes = DB.customers.reduce((a, c) => a + (Number(c.boxes) || 0), 0);
+  $('#homeStats').innerHTML = [
+    { c:'c1', e:'🐱', n:custCount, l:'客户宝宝总数' },
+    { c:'c2', e:'📦', n:pendingShip, l:'待发货订单' },
+    { c:'c3', e:'📝', n:activeTodo, l:'未完成待办' },
+    { c:'c4', e:'🧴', n:totalBoxes, l:'累计售出盒数' },
+  ].map((s) => `<div class="stat-card ${s.c}"><div class="stat-emoji">${s.e}</div><div class="stat-num">${s.n}</div><div class="stat-label">${s.l}</div></div>`).join('');
+
+  const quick = [
+    { e:'🐱', t:'添加宝宝', p:'customers' }, { e:'🌞', t:'去打卡', p:'checkin' },
+    { e:'📦', t:'去发货', p:'shipping' }, { e:'📊', t:'看总结', p:'summary' },
+  ];
+  $('#quickList').innerHTML = quick.map((q) => `<div class="quick-item" data-go="${q.p}"><span>${q.e}</span>${q.t}</div>`).join('');
+  $$('#quickList .quick-item').forEach((el) => el.addEventListener('click', () => switchTo(el.dataset.go)));
+
+  // 打卡概览
+  const date = todayStr(); ensureTodayCheckin();
+  const doneToday = DB.habits.filter((h) => DB.checkin[date]?.[h.id]).length;
+  $('#checkinSub').textContent = DB.habits.length ? `今日已完成 ${doneToday}/${DB.habits.length}` : '先去添加习惯吧';
+
+  const alerts = [];
+  if (pendingShip) alerts.push({ w:true, t:`有 ${pendingShip} 单美白饮待发货，记得安排 📦` });
+  if (activeTodo) alerts.push({ w:false, t:`还有 ${activeTodo} 件待办没搞定哦 📝` });
+  const newCust = DB.customers.filter((c) => c.start === date).length;
+  if (newCust) alerts.push({ w:false, t:`今天有 ${newCust} 位新宝宝开始喝美白饮 🎉` });
+  const lowBox = DB.customers.filter((c) => (Number(c.boxes)||0) <= 1).length;
+  if (lowBox) alerts.push({ w:true, t:`${lowBox} 位宝宝库存告急，可提醒回购 🔔` });
+  const lowInv = DB.inventory.filter((i) => (Number(i.stock)||0) <= (Number(i.warn)||0)).length;
+  if (lowInv) alerts.push({ w:true, t:`${lowInv} 个货品库存低于预警，记得补货 🧴` });
+  if (!alerts.length) alerts.push({ w:false, t:'今天一切顺利，给自己鼓个掌 👏' });
+  $('#homeAlerts').innerHTML = alerts.map((a) => `<li class="${a.w?'warn':''}">${a.w?'⚠️':'💡'} ${a.t}</li>`).join('');
+  renderMoment();
+  renderWomen();
+}
+
+/* ===== 客户 ===== */
+function avatarFor(c) { return c.avatar || (c.avatar = pick(MASCOTS, c.id ? c.id.length + (c.name?.length||0) : Math.random()*100)); }
+function refreshCityFilter() {
+  const cities = [...new Set(DB.customers.map((c) => c.city).filter(Boolean))];
+  $('#customerCityFilter').innerHTML = '<option value="">全部城市</option>' + cities.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+function renderCustomers() {
+  const kw = $('#customerSearch').value.trim().toLowerCase();
+  const city = $('#customerCityFilter').value;
+  let arr = DB.customers.slice();
+  if (city) arr = arr.filter((c) => c.city === city);
+  if (kw) arr = arr.filter((c) => [c.name, c.city, c.job, c.habit].some((v) => String(v||'').toLowerCase().includes(kw)));
+  const list = $('#customerList');
+  if (!arr.length) { list.innerHTML = `<div class="empty-state"><span class="big-emoji">🐾</span>${DB.customers.length?'没有匹配的宝宝':'还没有宝宝，点右上角添加第一位吧~'}</div>`; return; }
+  const rows = arr.map((c) => {
+    const habit = String(c.habit||'').split(/[,，]/).map((h)=>h.trim()).filter(Boolean).join(' · ');
+    const color = AVATAR_COLORS[c.id.length % AVATAR_COLORS.length];
+    return `<tr>
+      <td><span class="c-av" style="background:${color}">${avatarFor(c)}</span><span class="c-name">${esc(c.name)}</span></td>
+      <td>${c.age?esc(c.age)+'岁':'—'}</td>
+      <td>${c.city?esc(c.city):'—'}</td>
+      <td>${c.job?esc(c.job):'—'}</td>
+      <td class="c-boxes">${esc(c.boxes)||0} 盒</td>
+      <td class="c-habit">${habit||'—'}</td>
+      <td class="c-act"><button class="btn-edit" data-edit="${c.id}">✏️</button><button class="btn-del" data-del="${c.id}">🗑</button></td>
+    </tr>`;
+  }).join('');
+  list.innerHTML = `<div class="cust-table-wrap"><table class="cust-table">
+    <thead><tr><th>宝宝</th><th>年龄</th><th>城市</th><th>职业</th><th>盒数</th><th>习惯</th><th>操作</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+  $$('#customerList [data-edit]').forEach((b) => b.addEventListener('click', () => openCustomerModal(b.dataset.edit)));
+  $$('#customerList [data-del]').forEach((b) => b.addEventListener('click', () => deleteCustomer(b.dataset.del)));
+}
+function deleteCustomer(id) {
+  const c = DB.customers.find((x) => x.id === id); if (!confirm(`删除「${c?.name}」宝宝？`)) return;
+  DB.customers = DB.customers.filter((x) => x.id !== id);
+  DB.shippings = DB.shippings.filter((s) => s.customerId !== id);
+  if (DB.daily[todayStr()]) delete DB.daily[todayStr()][id];
+  save(); renderCustomers(); refreshCityFilter(); refreshShipCustomerFilter(); renderHome(); toast('已删除宝宝 🐾');
+}
+function openCustomerModal(id) {
+  const f = $('#customerForm'); f.reset(); $('#custId').value = '';
+  if (id) { const c = DB.customers.find((x) => x.id === id); $('#customerModalTitle').textContent='编辑宝宝';
+    $('#custId').value=c.id; $('#custName').value=c.name||''; $('#custAge').value=c.age||''; $('#custCity').value=c.city||'';
+    $('#custJob').value=c.job||''; $('#custHabit').value=c.habit||''; $('#custStart').value=c.start||''; $('#custBoxes').value=c.boxes||0; $('#custNote').value=c.note||'';
+  } else { $('#customerModalTitle').textContent='添加宝宝'; $('#custStart').value=todayStr(); }
+  $('#customerModal').classList.add('show'); setTimeout(()=>$('#custName').focus(), 50);
+}
+function submitCustomer(e) {
+  e.preventDefault(); const id = $('#custId').value;
+  const data = { name:$('#custName').value.trim(), age:$('#custAge').value.trim(), city:$('#custCity').value.trim(), job:$('#custJob').value.trim(), habit:$('#custHabit').value.trim(), start:$('#custStart').value, boxes:Number($('#custBoxes').value)||0, note:$('#custNote').value.trim() };
+  if (!data.name) { toast('要写个昵称哦 🐱'); return; }
+  if (id) { Object.assign(DB.customers.find((x)=>x.id===id), data); toast('已更新 ✅'); }
+  else { DB.customers.push({ id:uid(), avatar:pick(MASCOTS, Math.random()*99), ...data }); toast('欢迎新宝宝 🎉'); }
+  save(); closeModal('customerModal'); renderCustomers(); refreshCityFilter(); refreshShipCustomerFilter(); renderHome(); renderDaily();
+}
+
+/* ===== 每日打卡 ===== */
+const DAILY_TEMPLATES = [
+  { text:'☀️ 提醒喝早上那杯美白饮' }, { text:'💧 提醒白天多喝水' }, { text:'☂️ 提醒做好防晒' },
+  { text:'🌙 提醒喝晚上那杯美白饮' }, { text:'📸 鼓励打卡皮肤状态' }, { text:'💬 私信关心今天心情' },
+];
+function ensureTodayCheckin() {
+  const date = todayStr();
+  if (!DB.checkin[date]) {
+    if (DB.dailyMode === 'cumulative') {
+      const y = dateAdd(date, -1);
+      DB.checkin[date] = DB.checkin[y] ? { ...DB.checkin[y] } : {};
+    } else DB.checkin[date] = {};
+  }
+}
+function toggleHabit(hid) {
+  const date = todayStr(); ensureTodayCheckin();
+  const cur = !!DB.checkin[date][hid];
+  DB.checkin[date][hid] = !cur;
+  const logIdx = DB.checkinLog.findIndex((l) => l.date === date && l.habitId === hid);
+  if (!cur) { if (logIdx < 0) DB.checkinLog.push({ date, habitId: hid }); } else { if (logIdx >= 0) DB.checkinLog.splice(logIdx, 1); }
+  save(); renderCheckin(); renderHome();
+}
+function computeStreak() {
+  let streak = 0; const date = todayStr();
+  for (let i = 0; i < 1000; i++) {
+    const d = dateAdd(date, -i);
+    const day = DB.checkin[d]; if (!day) { if (i===0) continue; break; }
+    const allDone = DB.habits.length > 0 && DB.habits.every((h) => day[h.id]);
+    if (allDone) streak++; else { if (i===0) continue; break; }
+  }
+  return streak;
+}
+function renderCheckin() {
+  const date = todayStr(); ensureTodayCheckin();
+  $('#habitList').innerHTML = DB.habits.length ? DB.habits.map((h) => {
+    const done = !!DB.checkin[date][h.id];
+    return `<div class="habit-item ${done?'done':''}" data-hid="${h.id}">
+      <div class="h-ck" data-ck="${h.id}">${done?'✓':''}</div>
+      <span class="habit-emoji">${h.icon||'✨'}</span>
+      <span class="h-text">${esc(h.text)}</span>
+      <button class="h-del" data-hdel="${h.id}">✕</button>
+    </div>`;
+  }).join('') : `<div class="empty-state"><span class="big-emoji">💪</span>还没有习惯，点“添加习惯”开始吧</div>`;
+  $$('#habitList [data-ck]').forEach((b) => b.addEventListener('click', () => toggleHabit(b.dataset.ck)));
+  $$('#habitList [data-hdel]').forEach((b) => b.addEventListener('click', () => {
+    if (!confirm('删除这个习惯？')) return;
+    DB.habits = DB.habits.filter((h) => h.id !== b.dataset.hdel);
+    DB.checkinLog = DB.checkinLog.filter((l) => l.habitId !== b.dataset.hdel);
+    Object.values(DB.checkin).forEach((d) => delete d[b.dataset.hdel]);
+    save(); renderCheckin(); renderHome(); toast('已删除习惯');
+  }));
+  const doneToday = DB.habits.filter((h) => DB.checkin[date][h.id]).length;
+  $('#csStreak').textContent = computeStreak();
+  $('#csToday').textContent = `${doneToday}/${DB.habits.length}`;
+  $('#csTotal').textContent = DB.checkinLog.length;
+  // 近14天
+  const cal = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = dateAdd(date, -i); const day = DB.checkin[d];
+    let cls = '';
+    if (day && DB.habits.length) { const done = DB.habits.filter((h)=>day[h.id]).length; cls = done===DB.habits.length?'full':(done>0?'part':''); }
+    if (d === date) cls += ' today';
+    cal.push(`<div class="cal-day ${cls.trim()}">${Number(d.slice(8,10))}<span style="font-size:9px;opacity:.8">${(['日','一','二','三','四','五','六'])[new Date(d).getDay()]}</span></div>`);
+  }
+  $('#calGrid').innerHTML = cal.join('');
+}
+
+/* ===== 每日事项 ===== */
+function ensureDaily(date) {
+  if (!DB.daily[date]) DB.daily[date] = {};
+  DB.customers.forEach((c) => { if (!DB.daily[date][c.id]) DB.daily[date][c.id] = DAILY_TEMPLATES.map((t) => ({ id:uid(), text:t.text, done:false })); });
+  Object.keys(DB.daily[date]).forEach((cid) => { if (!DB.customers.find((c)=>c.id===cid)) delete DB.daily[date][cid]; });
+}
+function renderDaily() {
+  const date = todayStr(); ensureDaily(date); const wrap = $('#dailyList');
+  if (!DB.customers.length) { wrap.innerHTML = `<div class="empty-state"><span class="big-emoji">🍼</span>还没有宝宝，先去添加客户吧~</div>`; return; }
+  wrap.innerHTML = DB.customers.map((c) => {
+    const tasks = DB.daily[date][c.id]||[]; const done = tasks.filter((t)=>t.done).length;
+    const items = tasks.slice(0,4).map((t)=>`<div class="daily-task ${t.done?'done':''}"><span class="ck">${t.done?'✓':''}</span><span>${esc(t.text)}</span></div>`).join('');
+    return `<div class="daily-card" data-open="${c.id}">
+      <div class="daily-card-head"><span class="daily-avatar">${c.avatar||avatarFor(c)}</span><h4>${esc(c.name)}</h4><span class="daily-progress">${done}/${tasks.length}</span></div>
+      ${items}${tasks.length>4?`<div class="daily-task"><span class="ck"></span><span>…还有 ${tasks.length-4} 项</span></div>`:''}
+    </div>`;
+  }).join('');
+  $$('#dailyList .daily-card').forEach((el) => el.addEventListener('click', () => openDailyModal(el.dataset.open)));
+}
+function openDailyModal(cid) {
+  const c = DB.customers.find((x)=>x.id===cid); const date = todayStr(); ensureDaily(date);
+  $('#dailyModalTitle').textContent = `${c.avatar||avatarFor(c)} ${c.name} 的今日任务`;
+  $('#dailyModalBody').innerHTML = DB.daily[date][cid].map((t)=>`<div class="daily-modal-task ${t.done?'done':''}" data-tid="${t.id}"><span class="ck">${t.done?'✓':''}</span><span>${esc(t.text)}</span></div>`).join('');
+  $$('#dailyModalBody .daily-modal-task').forEach((el)=>el.addEventListener('click',()=>{
+    const t = DB.daily[date][cid].find((x)=>x.id===el.dataset.tid); t.done=!t.done; save();
+    el.classList.toggle('done',t.done); el.querySelector('.ck').textContent=t.done?'✓':''; renderDaily();
+  }));
+  $('#dailyModal').classList.add('show');
+}
+
+/* ===== 待办 ===== */
+let todoFilter = 'all';
+function renderTodos() {
+  const list = $('#todoList'); let arr = DB.todos.slice().reverse();
+  if (todoFilter==='active') arr = arr.filter((t)=>!t.done);
+  if (todoFilter==='done') arr = arr.filter((t)=>t.done);
+  if (!arr.length) { list.innerHTML = `<li class="todo-item" style="justify-content:center;color:var(--ink-soft);border-left-color:var(--pink-soft)">🎈 这里空空如也</li>`; }
+  else { list.innerHTML = arr.map((t)=>`<li class="todo-item ${t.done?'done':''}"><div class="todo-check" data-check="${t.id}">${t.done?'✓':''}</div><span class="todo-text">${esc(t.text)}</span><button class="todo-del" data-del="${t.id}">✕</button></li>`).join('');
+    $$('#todoList [data-check]').forEach((b)=>b.addEventListener('click',()=>toggleTodo(b.dataset.check)));
+    $$('#todoList [data-del]').forEach((b)=>b.addEventListener('click',()=>delTodo(b.dataset.del)));
+  }
+  const total = DB.todos.length; const done = DB.todos.filter((t)=>t.done).length;
+  $('#todoProgressFill').style.width = total ? (done/total*100)+'%' : '0%';
+  $('#todoProgressText').textContent = `${done}/${total}`;
+}
+function addTodo() { const v=$('#todoInput').value.trim(); if(!v) return; DB.todos.push({id:uid(),text:v,done:false}); save(); $('#todoInput').value=''; renderTodos(); }
+function toggleTodo(id){ const t=DB.todos.find((x)=>x.id===id); t.done=!t.done; save(); renderTodos(); renderHome(); }
+function delTodo(id){ DB.todos=DB.todos.filter((x)=>x.id!==id); save(); renderTodos(); renderHome(); }
+
+/* ===== 发货 ===== */
+function refreshShipCustomerFilter() {
+  const sel = $('#shipCustomerFilter'); const cur = sel.value;
+  sel.innerHTML = '<option value="">全部客户</option>' + DB.customers.map((c)=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  sel.value = cur;
+}
+function renderShipping() {
+  const status = $('#shipStatusFilter').value; const cid = $('#shipCustomerFilter').value;
+  const list = $('#shipList'); let arr = DB.shippings.slice().reverse();
+  if (status!=='all') arr = arr.filter((s)=>s.status===status); if (cid) arr = arr.filter((s)=>s.customerId===cid);
+  if (!arr.length) { list.innerHTML = `<div class="empty-state"><span class="big-emoji">📦</span>还没有发货记录，点右上角新建一单吧~</div>`; return; }
+  list.innerHTML = arr.map((s)=>{ const c=DB.customers.find((x)=>x.id===s.customerId);
+    return `<div class="ship-card"><div class="ship-top"><span class="ship-name">${c?(c.avatar||'🐱')+' '+esc(c.name):'未知宝宝'}</span><span class="ship-status ${s.status}">${s.status}</span></div>
+      <div class="ship-meta">🧴 ${esc(s.product||'胶原蛋白美白饮')} × <b>${esc(s.boxes)}</b> 盒<br/>📅 发货日：${esc(s.date)||'—'}<br/>${s.track?'🚚 单号：'+esc(s.track)+'<br/>':''}${s.addr?'📍 '+esc(s.addr):''}</div>
+      <div class="ship-actions"><button class="btn-edit" data-next="${s.id}">➡️ 推进状态</button><button class="btn-del" data-del="${s.id}">🗑 删除</button></div></div>`;
+  }).join('');
+  $$('#shipList [data-next]').forEach((b)=>b.addEventListener('click',()=>advanceShip(b.dataset.next)));
+  $$('#shipList [data-del]').forEach((b)=>b.addEventListener('click',()=>delShip(b.dataset.del)));
+}
+function advanceShip(id){ const s=DB.shippings.find((x)=>x.id===id); const flow={'待发货':'已发货','已发货':'已签收','已签收':'待发货'}; s.status=flow[s.status]||'待发货'; save(); renderShipping(); renderHome(); toast(`已更新为：${s.status} 📦`); }
+function delShip(id){ if(!confirm('删除这条发货记录？')) return; DB.shippings=DB.shippings.filter((x)=>x.id!==id); save(); renderShipping(); renderHome(); }
+function openShipModal() {
+  const f=$('#shipForm'); f.reset(); $('#shipId').value=''; $('#shipProduct').value='胶原蛋白美白饮'; $('#shipBoxes').value=1; $('#shipDate').value=todayStr(); $('#shipStatus').value='待发货';
+  $('#shipModalTitle').textContent='新建发货';
+  const sel=$('#shipCustomer'); if(sel.options.length<=1) refreshShipCustomerFilter();
+  sel.innerHTML = DB.customers.length ? DB.customers.map((c)=>`<option value="${c.id}">${esc(c.name)}</option>`).join('') : '<option value="">请先添加客户</option>';
+  $('#shipModal').classList.add('show');
+}
+function submitShip(e){
+  e.preventDefault(); const cid=$('#shipCustomer').value; if(!cid){ toast('先去添加一个客户宝宝吧 🐱'); return; }
+  const data={ customerId:cid, product:$('#shipProduct').value.trim()||'胶原蛋白美白饮', boxes:Number($('#shipBoxes').value)||1, date:$('#shipDate').value, status:$('#shipStatus').value, track:$('#shipTrack').value.trim(), addr:$('#shipAddr').value.trim() };
+  const id=$('#shipId').value;
+  if(id){ Object.assign(DB.shippings.find((x)=>x.id===id), data); toast('已更新发货 📦'); }
+  else {
+    DB.shippings.push({id:uid(),...data}); toast('发货单已建 🚚');
+    // 扣库存
+    const inv=DB.inventory.find((i)=>i.name===data.product); if(inv){ inv.stock=Math.max(0,(Number(inv.stock)||0)-(data.boxes||0)); save(); renderInventory(); }
+  }
+  save(); closeModal('shipModal'); renderShipping(); renderHome();
+}
+
+/* ===== 总结 ===== */
+function renderSummary() {
+  const custs=DB.customers; const total=custs.length;
+  const totalBoxes=custs.reduce((a,c)=>a+(Number(c.boxes)||0),0);
+  const shippedBoxes=DB.shippings.reduce((a,s)=>a+(Number(s.boxes)||0),0);
+  const newThisMonth=custs.filter((c)=>c.start&&c.start.slice(0,7)===todayStr().slice(0,7)).length;
+  const doneDaily=(()=>{ const day=DB.daily[todayStr()]||{}; let d=0,all=0; Object.values(day).forEach((ts)=>ts.forEach((t)=>{all++;if(t.done)d++;})); return all?Math.round(d/all*100):0; })();
+  $('#summaryStats').innerHTML=[{n:total,l:'👶 宝宝总数',c:'var(--pink-deep)'},{n:totalBoxes,l:'🧴 累计盒数',c:'var(--orange)'},{n:shippedBoxes,l:'📦 已发盒数',c:'var(--blue)'},{n:newThisMonth,l:'🌟 本月新增',c:'var(--mint)'},{n:doneDaily+'%',l:'✅ 今日关怀完成',c:'var(--purple)'}]
+    .map((s)=>`<div class="summary-stat"><div class="ss-num" style="color:${s.c}">${s.n}</div><div class="ss-label">${s.l}</div></div>`).join('');
+  renderCityChart(); renderJobChart(); renderMonthChart(); renderAgeChart(); renderRank();
+}
+function renderCityChart(){ const m={}; DB.customers.forEach((c)=>{const k=c.city||'未填'; m[k]=(m[k]||0)+1;}); const d=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8); const max=Math.max(1,...d.map((x)=>x[1])); const cols=['#ff7eb3','#6db6ff','#6bdcb7','#ff924c','#b083f5','#ffd93d','#ff8fab','#52c7e0'];
+  $('#cityChart').innerHTML = d.length? d.map(([k,v],i)=>`<div class="bar-row"><span class="bar-label">${esc(k)}</span><span class="bar-track"><span class="bar-fill" style="width:${v/max*100}%;background:${cols[i%cols.length]}"></span></span><span class="bar-val">${v}</span></div>`).join('') : '<p style="color:var(--ink-soft)">暂无数据</p>'; }
+function renderJobChart(){ const m={}; DB.customers.forEach((c)=>{const k=c.job||'未填'; m[k]=(m[k]||0)+1;}); const d=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,6); const total=d.reduce((a,x)=>a+x[1],0)||1; const cols=['#ff924c','#6bdcb7','#b083f5','#6db6ff','#ffd93d','#ff7eb3']; if(!d.length){$('#jobChart').innerHTML='<p style="color:var(--ink-soft)">暂无数据</p>';return;}
+  let acc=0; const segs=[]; d.forEach(([k,v],i)=>{const s=acc/total*360; acc+=v; const e=acc/total*360; segs.push(`${cols[i%cols.length]} ${s}deg ${e}deg`);});
+  const legend=d.map(([k,v],i)=>`<span><span class="legend-dot" style="background:${cols[i%cols.length]}"></span>${esc(k)} ${v}</span>`).join('');
+  $('#jobChart').innerHTML=`<div class="pie-wrap"><div class="pie" style="background:conic-gradient(${segs.join(',')})"></div><div class="pie-legend">${legend}</div></div>`; }
+function renderMonthChart(){ const m={}; for(let i=5;i>=0;i--){const d=new Date(); d.setMonth(d.getMonth()-i); const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; m[k]=0;}
+  DB.shippings.forEach((s)=>{ if(s.date&&m[s.date.slice(0,7)]!==undefined) m[s.date.slice(0,7)]+=Number(s.boxes)||0; });
+  const d=Object.entries(m); const max=Math.max(1,...d.map((x)=>x[1]));
+  $('#monthChart').innerHTML=d.map(([k,v])=>`<div class="bar-row"><span class="bar-label">${k.slice(2)}</span><span class="bar-track"><span class="bar-fill" style="width:${v/max*100}%;background:linear-gradient(90deg,#6db6ff,#b083f5)"></span></span><span class="bar-val">${v}</span></div>`).join(''); }
+function renderAgeChart(){ const b=[['<20',0],['20-29',0],['30-39',0],['40-49',0],['50+',0]]; DB.customers.forEach((c)=>{const a=Number(c.age); if(!a)return; if(a<20)b[0][1]++; else if(a<30)b[1][1]++; else if(a<40)b[2][1]++; else if(a<50)b[3][1]++; else b[4][1]++;}); const max=Math.max(1,...b.map((x)=>x[1])); const cols=['#ffd93d','#ff924c','#ff7eb3','#b083f5','#6db6ff'];
+  $('#ageChart').innerHTML=b.map(([k,v],i)=>`<div class="bar-row"><span class="bar-label">${k}</span><span class="bar-track"><span class="bar-fill" style="width:${v/max*100}%;background:${cols[i]}"></span></span><span class="bar-val">${v}</span></div>`).join(''); }
+function renderRank(){ const top=DB.customers.slice().sort((a,b)=>(Number(b.boxes)||0)-(Number(a.boxes)||0)).slice(0,5); const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  $('#rankList').innerHTML = top.length? top.map((c,i)=>`<div class="rank-item"><span class="rank-no">${medals[i]}</span><span class="rank-name">${c.avatar||avatarFor(c)} ${esc(c.name)}</span><span class="rank-boxes">${esc(c.boxes)||0} 盒</span></div>`).join('') : '<p style="color:var(--ink-soft)">还没有数据哦</p>'; }
+
+/* ===== 库存 ===== */
+function renderInventory() {
+  const list=$('#invList');
+  if(!DB.inventory.length){ list.innerHTML=`<div class="empty-state"><span class="big-emoji">🧴</span>还没有货品，点“添加货品”记录库存吧~</div>`; return; }
+  list.innerHTML=DB.inventory.map((i)=>{ const stock=Number(i.stock)||0; const warn=Number(i.warn)||0; const low=stock<=warn; const pct=Math.min(100, warn? stock/warn*100 : 100);
+    return `<div class="inv-card"><div class="inv-top"><span class="inv-name">${esc(i.name)}</span><span class="inv-stock ${low?'low':''}">${stock}<small style="font-size:12px"> ${esc(i.unit)||'件'}</small></span></div>
+      <div class="inv-meta">预警值：${warn} ${esc(i.unit)||'件'}</div>
+      <div class="inv-bar"><div class="${low?'low':''}" style="width:${pct}%"></div></div>
+      <div class="inv-actions"><button class="minus" data-imin="${i.id}">－ 出一盒</button><button class="plus" data-iadd="${i.id}">＋ 进一盒</button></div></div>`;
+  }).join('');
+  $$('#invList [data-imin]').forEach((b)=>b.addEventListener('click',()=>{ const i=DB.inventory.find((x)=>x.id===b.dataset.imin); i.stock=Math.max(0,(Number(i.stock)||0)-1); save(); renderInventory(); renderHome(); }));
+  $$('#invList [data-iadd]').forEach((b)=>b.addEventListener('click',()=>{ const i=DB.inventory.find((x)=>x.id===b.dataset.iadd); i.stock=(Number(i.stock)||0)+1; save(); renderInventory(); renderHome(); }));
+}
+function openInvModal(){ const f=$('#invForm'); f.reset(); $('#invId').value=''; $('#invWarn').value=5; $('#invModalTitle').textContent='添加货品'; $('#invModal').classList.add('show'); setTimeout(()=>$('#invName').focus(),50); }
+function submitInv(e){ e.preventDefault(); const id=$('#invId').value; const data={ name:$('#invName').value.trim(), stock:Number($('#invStock').value)||0, warn:Number($('#invWarn').value)||0, unit:$('#invUnit').value.trim()||'盒' };
+  if(!data.name){ toast('写个货品名吧 🧴'); return; } if(id) Object.assign(DB.inventory.find((x)=>x.id===id),data); else DB.inventory.push({id:uid(),...data});
+  save(); closeModal('invModal'); renderInventory(); renderHome(); toast(id?'已更新 🧴':'已添加货品 🧴'); }
+
+/* ===== 回访 ===== */
+function refreshFupCustomerFilter(){ const sel=$('#fupCustomerFilter'); sel.innerHTML='<option value="">全部客户</option>'+DB.customers.map((c)=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''); }
+function renderFollowups(){ const cid=$('#fupCustomerFilter')?.value||''; const list=$('#fupList'); let arr=DB.followups.slice().reverse(); if(cid) arr=arr.filter((f)=>f.customerId===cid);
+  if(!arr.length){ list.innerHTML=`<div class="empty-state"><span class="big-emoji">💌</span>还没有回访记录~</div>`; return; }
+  list.innerHTML=arr.map((f)=>{ const c=DB.customers.find((x)=>x.id===f.customerId);
+    return `<div class="fup-item"><button class="fup-del" data-del="${f.id}">✕</button><div class="fup-head"><span class="fup-cust">${c?(c.avatar||'🐱')+' '+esc(c.name):'未知宝宝'}</span><span class="fup-date">${esc(f.date)||''}</span></div><div class="fup-note">${esc(f.note)}</div></div>`;
+  }).join('');
+  $$('#fupList [data-del]').forEach((b)=>b.addEventListener('click',()=>{ DB.followups=DB.followups.filter((x)=>x.id!==b.dataset.del); save(); renderFollowups(); toast('已删除'); }));
+}
+function openFupModal(){ const f=$('#fupForm'); f.reset(); $('#fupDate').value=todayStr(); const sel=$('#fupCustomer'); sel.innerHTML=DB.customers.length?DB.customers.map((c)=>`<option value="${c.id}">${esc(c.name)}</option>`).join(''):'<option value="">请先添加客户</option>'; $('#fupModal').classList.add('show'); }
+function submitFup(e){ e.preventDefault(); const cid=$('#fupCustomer').value; if(!cid){ toast('先添加客户哦 🐱'); return; }
+  DB.followups.push({id:uid(), customerId:cid, date:$('#fupDate').value, note:$('#fupNote').value.trim()}); save(); closeModal('fupModal'); renderFollowups(); toast('回访已记录 💌'); }
+
+/* ===== 知识 ===== */
+function renderKnowledge(){ const list=$('#knowList');
+  if(!DB.knowledge.length){ list.innerHTML=`<div class="empty-state"><span class="big-emoji">💡</span>还没有笔记，点“添加笔记”记一条~</div>`; return; }
+  list.innerHTML=DB.knowledge.map((k)=>`<div class="know-card"><div class="know-head"><span class="know-title">${esc(k.title)}</span><span class="know-tag">${esc(k.tag)||'小知识'}</span></div><div class="know-body">${esc(k.body)}</div><div class="know-foot"><button class="know-edit" data-edit="${k.id}" title="修改">✏️ 修改</button><button class="know-del" data-del="${k.id}" title="删除">🗑 删除</button></div></div>`).join('');
+  $$('#knowList [data-edit]').forEach((b)=>b.addEventListener('click',()=>editKnow(b.dataset.edit)));
+  $$('#knowList [data-del]').forEach((b)=>b.addEventListener('click',()=>{ if (confirm('确定删除这条笔记？')) { DB.knowledge=DB.knowledge.filter((x)=>x.id!==b.dataset.del); save(); renderKnowledge(); toast('已删除'); } }));
+}
+function openKnowModal(){ const f=$('#knowForm'); f.reset(); $('#knowId').value=''; document.querySelector('#knowModal .modal-head h3').textContent='添加美白笔记'; $('#knowModal').classList.add('show'); setTimeout(()=>$('#knowTitle').focus(),50); }
+function editKnow(id){ const k=DB.knowledge.find((x)=>x.id===id); if(!k) return; $('#knowId').value=k.id; $('#knowTitle').value=k.title||''; $('#knowTag').value=k.tag||''; $('#knowBody').value=k.body||''; document.querySelector('#knowModal .modal-head h3').textContent='修改美白笔记'; $('#knowModal').classList.add('show'); setTimeout(()=>$('#knowTitle').focus(),50); }
+function submitKnow(e){ e.preventDefault(); const data={ title:$('#knowTitle').value.trim(), tag:$('#knowTag').value.trim(), body:$('#knowBody').value.trim() }; if(!data.title){ toast('写个标题吧 💡'); return; }
+  const id=$('#knowId').value;
+  if(id){ const it=DB.knowledge.find((x)=>x.id===id); if(it) Object.assign(it,data); toast('已更新笔记 ✏️'); }
+  else { DB.knowledge.push({id:uid(),...data}); toast('已保存笔记 💡'); }
+  save(); closeModal('knowModal'); renderKnowledge(); }
+
+/* ===== 授权 / 试用 / 订阅 ===== */
+const SECRET = 'mb-lic-7f3a9c21-27558161-0000-xK9pQ2vL8mZ';
+const TRIAL_DAYS = 7;
+const QP = (() => { try { return new URLSearchParams((location.href.split('?')[1] || '').split('#')[0]); } catch (e) { return new URLSearchParams(''); } })();
+const LINK_TTL = 10 * 60000; // 分享链接有效时长：10 分钟
+const APP_MODE = (() => { try { return new URLSearchParams(location.search).get('mode') === 'user' ? 'user' : 'owner'; } catch (e) { return 'owner'; } })();
+const SELLER_CONTACT = (() => { try { const s = new URLSearchParams(location.search).get('seller'); return s ? decodeURIComponent(s) : ''; } catch (e) { return ''; } })();
+
+/* 纯 JS SHA-256（无需外部库，file:// 也能跑） */
+function sha256(msg) {
+  function rotr(n, x) { return (x >>> n) | (x << (32 - n)); }
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0xe0b85d98,0x25c39c6b,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let m = msg; const bitLen = m.length * 8;
+  m += '\x80'; while (m.length % 64 !== 56) m += '\x00';
+  for (let i = 0; i < 4; i++) m += String.fromCharCode((bitLen >>> ((3 - i) * 8)) & 0xff);
+  const w = new Array(64);
+  for (let i = 0; i < m.length; i += 64) {
+    for (let j = 0; j < 16; j++) { let v = 0; for (let k = 0; k < 4; k++) v = (v << 8) | m.charCodeAt(i + j * 4 + k); w[j] = v; }
+    for (let j = 16; j < 64; j++) { const s0 = rotr(7, w[j-15]) ^ rotr(18, w[j-15]) ^ (w[j-15] >>> 3); const s1 = rotr(17, w[j-2]) ^ rotr(19, w[j-2]) ^ (w[j-2] >>> 10); w[j] = (w[j-16] + s0 + w[j-7] + s1) | 0; }
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for (let j = 0; j < 64; j++) { const S1 = rotr(6,e)^rotr(11,e)^rotr(25,e); const ch = (e&f)^((~e)&g); const t1 = (h+S1+ch+K[j]+w[j])|0; const S0 = rotr(2,a)^rotr(13,a)^rotr(22,a); const maj = (a&b)^(a&c)^(b&c); const t2 = (S0+maj)|0; h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0; }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  return H.map((x) => ('00000000' + (x >>> 0).toString(16)).slice(-8)).join('');
+}
+function hmacSha256(key, msg) {
+  const B = 64; if (key.length > B) key = sha256(key);
+  let kpad = ''; for (let i = 0; i < B; i++) kpad += i < key.length ? key[i] : '\x00';
+  let o = '', inn = '';
+  for (let x = 0; x < B; x++) { const c = kpad.charCodeAt(x); o += String.fromCharCode(c ^ 0x5c); inn += String.fromCharCode(c ^ 0x36); }
+  return sha256(o + sha256(inn + msg));
+}
+function makeCode(mins, phone) { const exp = Date.now() + mins * 60000; const payload = btoa(JSON.stringify({ exp: exp, v: 3, phone: phone || '' })); const sig = hmacSha256(SECRET, payload).slice(0, 16); return payload + '.' + sig; }
+function verifyCode(code, phone) {
+  try {
+    const parts = String(code).trim().split('.'); if (parts.length !== 2) return { ok:false, reason:'格式错误' };
+    const payload = parts[0], sig = parts[1]; if (hmacSha256(SECRET, payload).slice(0, 16) !== sig) return { ok:false, reason:'无效或已被篡改' };
+    const obj = JSON.parse(atob(payload)); if (!obj.exp || obj.exp < Date.now()) return { ok:false, reason:'已过期' };
+    if (!obj.phone || obj.v < 3) return { ok:false, reason:'无效或已失效' };
+    if (obj.phone !== (phone || '').trim()) return { ok:false, reason:'手机号与购码登记不一致' };
+    return { ok:true, exp: obj.exp };
+  } catch (e) { return { ok:false, reason:'无效' }; }
+}
+function trialEndTs() { if (!DB.trialStart) return 0; const t = Date.parse(DB.trialStart); return isNaN(t) ? 0 : t + TRIAL_DAYS * 86400000; }
+function isUnlocked() {
+  if (APP_MODE === 'owner') return true;
+  const now = Date.now();
+  if (DB.unlockExp && now <= DB.unlockExp) return true;
+  if (DB.trialStart && now <= trialEndTs()) return true;
+  return false;
+}
+function daysLeft() {
+  const now = Date.now();
+  if (DB.unlockExp && now <= DB.unlockExp) return Math.ceil((DB.unlockExp - now) / 86400000);
+  if (DB.trialStart) { const e = trialEndTs(); if (now <= e) return Math.ceil((e - now) / 86400000); }
+  return 0;
+}
+function checkAccess() { if (isUnlocked()) hideLock(); else showLock(); }
+function showLock() {
+  const el = $('#lockScreen'); if (!el) return;
+  if (APP_MODE === 'user' && DB.linkBlocked) {
+    $('#lockTitle').textContent = '分享链接已失效 🔒';
+    $('#lockDesc').innerHTML = '该分享链接已超过 10 分钟有效期（或已被篡改），无法开启试用。<br/>请向卖家重新获取最新链接，或直接输入激活码解锁。';
+    $('#lockSeller').textContent = SELLER_CONTACT ? ('卖家微信：' + SELLER_CONTACT) : '联系卖家获取激活码';
+    el.classList.add('show'); return;
+  }
+  const inTrial = APP_MODE === 'user' && DB.trialStart && Date.now() <= trialEndTs();
+  $('#lockTitle').textContent = inTrial ? `试用还剩 ${daysLeft()} 天 🔓` : '试用已结束 🔒';
+  $('#lockDesc').innerHTML = inTrial ? `你正在使用分享版，可免费试用 ${TRIAL_DAYS} 天，到期需订阅激活码。` : `你使用的分享版已结束 ${TRIAL_DAYS} 天试用，订阅激活码后可继续使用全部功能。`;
+  $('#lockSeller').textContent = SELLER_CONTACT ? ('卖家微信：' + SELLER_CONTACT) : '联系卖家获取激活码';
+  el.classList.add('show');
+}
+function hideLock() { const el = $('#lockScreen'); if (el) el.classList.remove('show'); }
+function activateCode() {
+  const code = $('#actCode').value.trim(); if (!code) { toast('请输入激活码'); return; }
+  const phone = ($('#actPhone').value || '').trim(); if (!phone) { $('#actErr').textContent = '请填写购码时登记的手机号'; return; }
+  if ((DB.usedCodes || []).includes(code)) { $('#actErr').textContent = '激活码已被使用过，不可重复使用'; return; }
+  const r = verifyCode(code, phone);
+  if (!r.ok) { $('#actErr').textContent = '激活码' + r.reason + '，无法使用'; return; }
+  DB.usedCodes = DB.usedCodes || [];
+  if (!DB.usedCodes.includes(code)) DB.usedCodes.push(code);
+  DB.unlockExp = r.exp; save(); $('#actErr').textContent = ''; hideLock(); toast('已激活，可继续使用 🎉');
+}
+function shareLinkPayload(exp, seller) { return btoa(JSON.stringify({ exp: exp, v: 1 })) + '|' + (seller || ''); }
+function genShareLink() {
+  if (location.protocol === 'file:') { toast('请先把工作台部署到免费托管，再用分享链接'); return; }
+  const seller = (DB.sellerWechat || '').trim();
+  const exp = Date.now() + LINK_TTL;
+  const sig = hmacSha256(SECRET, shareLinkPayload(exp, seller)).slice(0, 16);
+  const url = location.origin + location.pathname + '?mode=user&exp=' + exp + '&sig=' + encodeURIComponent(sig) + (seller ? ('&seller=' + encodeURIComponent(seller)) : '');
+  const inp = $('#shareLinkOut'); inp.value = url; inp.select();
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('分享链接已复制 📤'), () => {}); else document.execCommand('copy');
+  toast('分享链接已生成（10 分钟内有效）📤');
+}
+// 校验分享链接是否在有效期内且未被篡改；返回 'ok' | 'expired' | 'bad'
+function checkShareLink() {
+  const exp = Number(QP.get('exp')); const sig = QP.get('sig');
+  if (!exp || !sig) return 'ok'; // 无 exp 的旧链接（兼容）按正常试用处理
+  const seller = QP.get('seller') || '';
+  if (hmacSha256(SECRET, shareLinkPayload(exp, seller)).slice(0, 16) !== sig) return 'bad';
+  if (Date.now() > exp) return 'expired';
+  return 'ok';
+}
+function genActCode() {
+  const mins = Number($('#codeDays').value) || 10;
+  const phone = ($('#custPhone').value || '').trim();
+  if (!phone) { toast('请先填入客户购码时登记的手机号'); return; }
+  const code = makeCode(mins, phone);
+  const inp = $('#codeOut'); inp.value = code; inp.select();
+  if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast('激活码已复制（' + mins + ' 分钟内、仅绑定该手机号）🔑'), () => {}); else document.execCommand('copy');
+}
+function saveBlob(text, name) {
+  const b = new Blob([text], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function fetchSource() {
+  if (location.protocol === 'file:') return null;
+  try { const r = await fetch(location.href); if (!r.ok) return null; return await r.text(); } catch (e) { return null; }
+}
+function bakeUser(src) {
+  return src
+    .replace(/const APP_MODE = \(\(\) => \{[\s\S]*?\}\)\(\);/, "const APP_MODE = 'user';")
+    .replace(/const SELLER_CONTACT = \(\(\) => \{[\s\S]*?\}\)\(\);/, "const SELLER_CONTACT = " + JSON.stringify(DB.sellerWechat || '') + ";");
+}
+function downloadOwnerFile() {
+  fetchSource().then((src) => {
+    if (!src) { saveBlob(document.documentElement.outerHTML, '美白工作台-正本.html'); toast('正本已下载（本地文件模式） 📥'); return; }
+    saveBlob(src, '美白工作台-正本.html'); toast('正本已下载 📥');
+  });
+}
+function downloadUserFile() {
+  fetchSource().then((src) => {
+    if (!src) { toast('请先部署到托管，或用「生成分享链接」分享'); return; }
+    saveBlob(bakeUser(src), '美白工作台-试用版.html'); toast('用户版已下载，发微信好友即可（7天试用） 📤');
+  });
+}
+function maybeShowInstall() {
+  if (APP_MODE !== 'owner') { const b = $('#installBanner'); if (b) b.classList.remove('show'); return; }
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if (isMobile && !standalone && !localStorage.getItem('installHintSeen')) $('#installBanner').classList.add('show');
+}
+function hideInstall() { localStorage.setItem('installHintSeen', '1'); $('#installBanner').classList.remove('show'); }
+
+/* ===== 收款售卖 ===== */
+function renderSell() { renderSellStats(); renderPayCodes(); renderProducts(); renderOrders(); }
+function renderSellStats() {
+  const month = todayStr().slice(0, 7);
+  const monthPaid = DB.orders.filter((o) => o.status !== '待付款' && (o.paidAt || o.date || '').slice(0, 7) === month);
+  const income = monthPaid.reduce((a, o) => a + (Number(o.amount) || 0), 0);
+  const pending = DB.orders.filter((o) => o.status === '待付款').reduce((a, o) => a + (Number(o.amount) || 0), 0);
+  const pendCount = DB.orders.filter((o) => o.status === '待付款').length;
+  $('#sellStats').innerHTML = [
+    { n: '¥' + income.toFixed(2), l: '💵 本月已收', c: 'var(--mint)' },
+    { n: '¥' + pending.toFixed(2), l: '⏳ 待回款', c: 'var(--orange)' },
+    { n: pendCount, l: '🧾 待付款订单', c: 'var(--pink-deep)' },
+    { n: DB.orders.length, l: '📋 总订单', c: 'var(--blue)' },
+  ].map((s) => `<div class="sell-stat"><div class="ss-num" style="color:${s.c}">${s.n}</div><div class="ss-label">${s.l}</div></div>`).join('');
+}
+function renderPayCodes() {
+  const box = $('#payCodeBox');
+  const items = [];
+  if (DB.payCodes.wechat) items.push(['微信', 'wechat', DB.payCodes.wechat]);
+  if (DB.payCodes.alipay) items.push(['支付宝', 'alipay', DB.payCodes.alipay]);
+  if (!items.length) { box.innerHTML = '<div class="empty-mini">还没有收款码，点右上角「收款码」上传 📷</div>'; return; }
+  box.innerHTML = items.map(([name, key, src]) => `<div class="paycode-item"><img src="${src}" alt="${name}收款码" /><div class="paycode-name">${name}<button class="pc-del" data-pc="${key}">✕</button></div></div>`).join('');
+  $$('#payCodeBox [data-pc]').forEach((b) => b.addEventListener('click', () => { DB.payCodes[b.dataset.pc] = ''; save(); renderPayCodes(); toast('已删除'); }));
+}
+function renderProducts() {
+  const list = $('#productList');
+  if (!DB.products.length) { list.innerHTML = '<div class="empty-mini">还没有上架商品，点「商品」添加 🛍️</div>'; return; }
+  list.innerHTML = DB.products.map((p) => `<div class="product-item"><div class="pi-info"><span class="pi-name">${esc(p.name)}</span><span class="pi-price">¥${(Number(p.price) || 0).toFixed(2)}</span></div><button class="pi-del" data-pdel="${p.id}">🗑</button></div>`).join('');
+  $$('#productList [data-pdel]').forEach((b) => b.addEventListener('click', () => { if (confirm('删除该商品？')) { DB.products = DB.products.filter((x) => x.id !== b.dataset.pdel); save(); renderProducts(); toast('已删除'); } }));
+}
+function renderOrders() {
+  const status = $('#orderStatusFilter').value; const list = $('#orderList');
+  let arr = DB.orders.slice().reverse(); if (status !== 'all') arr = arr.filter((o) => o.status === status);
+  if (!arr.length) { list.innerHTML = '<div class="empty-state"><span class="big-emoji">🧾</span>还没有订单，点「新订单」开张吧~</div>'; return; }
+  list.innerHTML = arr.map((o) => {
+    const acts = [];
+    if (o.status === '待付款') acts.push(`<button class="btn-paid" data-opay="${o.id}">✅ 标记收款</button>`);
+    if (o.status === '已收款') acts.push(`<button class="btn-ship" data-oshi="${o.id}">📦 标记发货</button>`);
+    acts.push(`<button class="btn-del" data-odel="${o.id}">🗑 删除</button>`);
+    return `<div class="order-card"><div class="order-top"><span class="order-cust">${esc(o.customer)}</span><span class="order-status ${o.status}">${o.status}</span></div>
+      <div class="order-meta">${esc(o.product)} × <b>${esc(o.qty)}</b> ｜ ${esc(o.method)}<br/>💰 ¥${(Number(o.amount) || 0).toFixed(2)}${o.note ? '<br/>📝 ' + esc(o.note) : ''}<br/>📅 ${esc(o.date)}</div>
+      <div class="order-actions">${acts.join('')}</div></div>`;
+  }).join('');
+  $$('#orderList [data-opay]').forEach((b) => b.addEventListener('click', () => markOrderPaid(b.dataset.opay)));
+  $$('#orderList [data-oshi]').forEach((b) => b.addEventListener('click', () => markOrderShipped(b.dataset.oshi)));
+  $$('#orderList [data-odel]').forEach((b) => b.addEventListener('click', () => delOrder(b.dataset.odel)));
+}
+function markOrderPaid(id) { const o = DB.orders.find((x) => x.id === id); if (!o) return; o.status = '已收款'; o.paidAt = todayStr(); save(); renderOrders(); renderSellStats(); toast('已收款 💰'); }
+function markOrderShipped(id) { const o = DB.orders.find((x) => x.id === id); if (!o) return; o.status = '已发货'; save(); renderOrders(); renderSellStats(); toast('已发货 📦'); }
+function delOrder(id) { if (!confirm('删除该订单？')) return; DB.orders = DB.orders.filter((x) => x.id !== id); save(); renderOrders(); renderSellStats(); }
+function updateOrderAmount() { const qty = Number($('#orderQty').value) || 0; const price = Number($('#orderPrice').value) || 0; $('#orderAmount').textContent = '¥' + (qty * price).toFixed(2); }
+function openOrderModal() {
+  const f = $('#orderForm'); f.reset(); $('#orderId').value = ''; $('#orderQty').value = 1; $('#orderModalTitle').textContent = '新建订单';
+  const sel = $('#orderProduct');
+  sel.innerHTML = DB.products.length ? DB.products.map((p) => `<option value="${p.id}">${esc(p.name)} ¥${(Number(p.price) || 0).toFixed(2)}</option>`).join('') : '<option value="">请先添加商品</option>';
+  if (DB.products.length) { $('#orderPrice').value = DB.products[0].price; } else { $('#orderPrice').value = ''; }
+  updateOrderAmount(); $('#orderModal').classList.add('show');
+}
+function submitOrder(e) {
+  e.preventDefault(); const customer = $('#orderCustomer').value.trim(); if (!customer) { toast('写个客户昵称吧'); return; }
+  const pid = $('#orderProduct').value; const qty = Number($('#orderQty').value) || 1; const price = Number($('#orderPrice').value) || 0; const amount = +(qty * price).toFixed(2);
+  const p = DB.products.find((x) => x.id === pid); const productName = p ? p.name : '自定义商品';
+  const id = $('#orderId').value;
+  if (id) { Object.assign(DB.orders.find((x) => x.id === id), { customer, product: productName, qty, price, amount, method: $('#orderMethod').value, note: $('#orderNote').value.trim() }); toast('订单已更新'); }
+  else { DB.orders.push({ id: uid(), customer, product: productName, qty, price, amount, method: $('#orderMethod').value, note: $('#orderNote').value.trim(), status: '待付款', date: todayStr() }); toast('订单已创建 🧾'); }
+  save(); closeModal('orderModal'); renderOrders(); renderSellStats();
+}
+function openPayCodeModal() { $('#payCodeType').value = 'wechat'; $('#payCodeFile').value = ''; $('#payCodeModal').classList.add('show'); }
+function savePayCode() {
+  const type = $('#payCodeType').value; const file = $('#payCodeFile').files[0]; if (!file) { toast('先选一张收款码图片'); return; }
+  const r = new FileReader(); r.onload = (ev) => { DB.payCodes[type] = ev.target.result; save(); closeModal('payCodeModal'); renderPayCodes(); toast('收款码已保存 📷'); }; r.readAsDataURL(file);
+}
+function openProductModal() { const f = $('#productForm'); f.reset(); $('#productId').value = ''; $('#productModalTitle').textContent = '添加商品'; $('#productModal').classList.add('show'); setTimeout(() => $('#productName').focus(), 50); }
+function submitProduct(e) {
+  e.preventDefault(); const name = $('#productName').value.trim(); const price = Number($('#productPrice').value) || 0; if (!name) { toast('写个商品名吧 🛍️'); return; }
+  const id = $('#productId').value; if (id) Object.assign(DB.products.find((x) => x.id === id), { name, price }); else DB.products.push({ id: uid(), name, price });
+  save(); closeModal('productModal'); renderProducts(); toast(id ? '已更新 🛍️' : '已上架商品 🛍️');
+}
+
+/* ===== 弹窗通用 ===== */
+function closeModal(id){ $('#'+id).classList.remove('show'); }
+function initModals(){ $$('[data-close]').forEach((b)=>b.addEventListener('click',()=>closeModal(b.dataset.close))); $$('.modal-mask').forEach((m)=>m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('show'); })); document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') $$('.modal-mask.show').forEach((m)=>m.classList.remove('show')); }); }
+
+/* ===== 设置 / 导出导入 ===== */
+function renderSettings(){
+  $('#setBizName').value = DB.bizName;
+  $('#setSellerWechat').value = DB.sellerWechat || '';
+  $$('input[name="mode"]').forEach((r)=> r.checked = (r.value===DB.dailyMode));
+  const ownerPanel = $('#ownerPanel'); if (ownerPanel) ownerPanel.style.display = (APP_MODE === 'owner') ? '' : 'none';
+  renderTheme();
+  renderUpdateBtn();
+}
+
+/* ===== 版本更新检测（老板版 / 朋友版通用） ===== */
+async function checkUpdate() {
+  if (location.protocol === 'file:') { DB.updateAvailable = false; return false; } // 本地文件无法联网校验
+  try {
+    const base = location.href.split('#')[0];
+    const sep = base.includes('?') ? '&' : '?';
+    const r = await fetch(base + sep + '__upd=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) { DB.updateAvailable = false; return false; }
+    const txt = await r.text();
+    const m = txt.match(/BUILD_ID\s*=\s*['"]([^'"]+)['"]/);
+    if (!m) { DB.updateAvailable = false; return false; }
+    DB.updateAvailable = (m[1] !== BUILD_ID);
+    return DB.updateAvailable;
+  } catch (e) { DB.updateAvailable = false; return false; }
+}
+function renderUpdateBtn() {
+  const btn = $('#updateBtn'); if (!btn) return;
+  if (DB.updateAvailable) {
+    btn.classList.add('avail'); btn.classList.remove('none');
+    btn.textContent = '🆕 有新版本，点此更新';
+  } else {
+    btn.classList.remove('avail'); btn.classList.add('none');
+    btn.textContent = '✅ 已是最新（v' + BUILD_ID + '）';
+  }
+}
+async function doUpdateCheck() {
+  toast('正在检查更新…');
+  const has = await checkUpdate();
+  renderUpdateBtn();
+  toast(has ? '发现新版本，点击按钮即可更新 🆕' : '已是最新版本 ✅');
+}
+function clickUpdate() {
+  if (DB.updateAvailable) location.reload(true); // 硬刷新拉取最新源码
+  else doUpdateCheck();
+}
+function exportData(){ const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${DB.bizName}_数据_${todayStr()}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast('数据已导出 📤'); }
+function importData(){ const input=document.createElement('input'); input.type='file'; input.accept='.json,application/json'; input.onchange=(e)=>{ const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=(ev)=>{ try{ const d=JSON.parse(ev.target.result); if(!d||typeof d!=='object') throw new Error('格式错误'); if(!confirm('导入会覆盖当前所有数据，确定继续？')) return;
+  ['bizName','dailyMode','theme','customers','todos','shippings','daily','habits','checkin','checkinLog','inventory','followups','orders','products','payCodes','knowledge'].forEach((k)=>{ if(d[k]!==undefined) DB[k]=d[k]; });
+  save(); refreshAll(); toast('数据导入成功 📥'); } catch(err){ toast('导入失败：'+err.message); } }; r.readAsText(file); }; input.click(); }
+function refreshAll(){ refreshCityFilter(); refreshShipCustomerFilter(); refreshFupCustomerFilter(); renderCustomers(); renderCheckin(); renderDaily(); renderTodos(); renderShipping(); renderInventory(); renderFollowups(); renderKnowledge(); renderSell(); renderHome(); }
+
+/* ===== 事件 ===== */
+function initEvents(){
+  $('#addCustomerBtn').addEventListener('click',()=>openCustomerModal());
+  $('#customerForm').addEventListener('submit',submitCustomer);
+  $('#customerSearch').addEventListener('input',renderCustomers);
+  $('#customerCityFilter').addEventListener('change',renderCustomers);
+
+  $('#goCheckin').addEventListener('click',()=>switchTo('checkin'));
+  $('#addHabitBtn').addEventListener('click',()=>{ const f=$('#habitForm'); f.reset(); $('#habitIcon').value='✨'; $('#habitModal').classList.add('show'); });
+  $('#habitForm').addEventListener('submit',(e)=>{ e.preventDefault(); const text=$('#habitText').value.trim(); if(!text){toast('写点习惯吧');return;} DB.habits.push({id:uid(),text,icon:$('#habitIcon').value.trim()||'✨'}); save(); closeModal('habitModal'); renderCheckin(); renderHome(); toast('已添加习惯 💪'); });
+
+  $('#addShipBtn').addEventListener('click',openShipModal);
+  $('#shipForm').addEventListener('submit',submitShip);
+  $('#shipStatusFilter').addEventListener('change',renderShipping);
+  $('#shipCustomerFilter').addEventListener('change',renderShipping);
+
+  $('#todoAddBtn').addEventListener('click',addTodo);
+  $('#todoInput').addEventListener('keydown',(e)=>{ if(e.key==='Enter') addTodo(); });
+  $$('.todo-filter .chip').forEach((c)=>c.addEventListener('click',()=>{ $$('.todo-filter .chip').forEach((x)=>x.classList.toggle('active',x===c)); todoFilter=c.dataset.filter; renderTodos(); }));
+
+  $('#addInvBtn').addEventListener('click',openInvModal);
+  $('#invForm').addEventListener('submit',submitInv);
+
+  $('#addFupBtn').addEventListener('click',openFupModal);
+  $('#fupForm').addEventListener('submit',submitFup);
+  $('#fupCustomerFilter').addEventListener('change',renderFollowups);
+
+  $('#addKnowBtn').addEventListener('click',openKnowModal);
+  $('#knowForm').addEventListener('submit',submitKnow);
+
+  // 收款售卖
+  $('#addOrderBtn').addEventListener('click',openOrderModal);
+  $('#orderForm').addEventListener('submit',submitOrder);
+  $('#orderStatusFilter').addEventListener('change',renderOrders);
+  $('#orderQty').addEventListener('input',updateOrderAmount);
+  $('#orderPrice').addEventListener('input',updateOrderAmount);
+  $('#orderProduct').addEventListener('change',()=>{ const p=DB.products.find((x)=>x.id===$('#orderProduct').value); if(p){ $('#orderPrice').value=p.price; updateOrderAmount(); } });
+  $('#addProductBtn').addEventListener('click',openProductModal);
+  $('#productForm').addEventListener('submit',submitProduct);
+  $('#setPayCodeBtn').addEventListener('click',openPayCodeModal);
+  $('#payCodeSaveBtn').addEventListener('click',savePayCode);
+
+  $('#rerollQuote').addEventListener('click',rerollQuote);
+  $('#navToggle').addEventListener('click', toggleNav);
+  $('#momentReroll').addEventListener('click', rerollMoment);
+  $('#momentCopy').addEventListener('click', copyMoment);
+  $('#womenReroll').addEventListener('click', rerollWomen);
+  $('#womenCopy').addEventListener('click', copyWomen);
+  const updateBtn = $('#updateBtn'); if (updateBtn) updateBtn.addEventListener('click', clickUpdate);
+  const updateCheckBtn = $('#updateCheckBtn'); if (updateCheckBtn) updateCheckBtn.addEventListener('click', doUpdateCheck);
+  const ibInstall = $('#ibInstall');
+  if (ibInstall) ibInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (_) {}
+    deferredPrompt = null; hideInstall();
+  });
+  $('#refreshSummary').addEventListener('click',()=>{ renderSummary(); toast('数据已刷新 🔄'); });
+
+  $('#exportBtn').addEventListener('click',exportData);
+  $('#importBtn').addEventListener('click',importData);
+
+  // 设置
+  $('#setBizName').addEventListener('input',(e)=>{ DB.bizName=e.target.value.trim()||'美白小铺'; $('#brandName').textContent=DB.bizName; save(); });
+  $('#themeCustom').addEventListener('input',(e)=>{ DB.theme=e.target.value; applyTheme(e.target.value); save(); });
+  $$('input[name="mode"]').forEach((r)=>r.addEventListener('change',()=>{ if(r.checked){ DB.dailyMode=r.value; save(); ensureTodayCheckin(); renderCheckin(); toast(DB.dailyMode==='cumulative'?'已切换为累积记录模式':'已切换为每日重置模式'); } }));
+  $('#setExport').addEventListener('click',exportData);
+  $('#setImport').addEventListener('click',importData);
+  $('#setClear').addEventListener('click',()=>{ if(confirm('确定清空全部数据？此操作不可恢复！')){ localStorage.removeItem(STORE_KEY); location.reload(); } });
+
+  // 授权 / 分享 / 激活
+  $('#setSellerWechat').addEventListener('input',(e)=>{ DB.sellerWechat=e.target.value.trim(); save(); });
+  $('#genShareBtn').addEventListener('click',genShareLink);
+  $('#genCodeBtn').addEventListener('click',genActCode);
+  $('#dlOwnerBtn').addEventListener('click',downloadOwnerFile);
+  $('#dlUserBtn').addEventListener('click',downloadUserFile);
+  $('#ibClose').addEventListener('click',hideInstall);
+  $('#actBtn').addEventListener('click',activateCode);
+  $('#actCode').addEventListener('keydown',(e)=>{ if(e.key==='Enter') activateCode(); });
+}
+
+/* ===== 启动 ===== */
+function seedDemo(){
+  if (DB.customers.length) return;
+  [ {name:'小白兔',age:25,city:'上海',job:'设计师',habit:'熬夜,爱喝奶茶',start:todayStr(),boxes:6,note:'目标：全身美白'},
+    {name:'橘子猫',age:30,city:'杭州',job:'老师',habit:'怕晒',start:'2024-01-01',boxes:12,note:'已明显变白'},
+    {name:'胖虎',age:22,city:'成都',job:'学生',habit:'爱吃辣',start:todayStr(),boxes:1,note:'刚起步'} ].forEach((d)=>DB.customers.push({id:uid(),avatar:pick(MASCOTS,Math.random()*99),...d}));
+  DB.todos.push({id:uid(),text:'整理本月客户回访表',done:false},{id:uid(),text:'补一波美白饮货',done:false});
+  DB.shippings.push({id:uid(),customerId:DB.customers[1].id,product:'胶原蛋白美白饮',boxes:3,date:todayStr(),status:'已发货',track:'SF123456',addr:'杭州西湖区'});
+  DB.inventory.push({id:uid(),name:'胶原蛋白美白饮',stock:48,warn:10,unit:'盒'},{id:uid(),name:'美白面膜',stock:6,warn:8,unit:'盒'});
+  DB.products.push({id:uid(),name:'胶原蛋白美白饮 1盒',price:199},{id:uid(),name:'美白饮 3盒装(更划算)',price:549},{id:uid(),name:'美白面膜 1盒',price:89});
+  save();
+}
+function init(){
+  load(); seedDemo(); initPetRain(); initNav(); initModals(); initEvents();
+  if (APP_MODE === 'user') {
+    const linkState = checkShareLink();
+    if (linkState === 'expired' || linkState === 'bad') { DB.linkBlocked = true; }
+    else { DB.linkBlocked = false; if (!DB.trialStart) { DB.trialStart = todayStr(); save(); } }
+  }
+  applyTheme(DB.theme);
+  tickClock(); setInterval(tickClock,1000); showQuote();
+  refreshCityFilter(); refreshShipCustomerFilter(); refreshFupCustomerFilter();
+  renderCustomers(); renderCheckin(); renderDaily(); renderShipping(); renderTodos(); renderInventory(); renderFollowups(); renderKnowledge(); renderSell(); renderHome(); renderSettings();
+  renderUpdateBtn(); checkUpdate().then(renderUpdateBtn); // 启动即检测新版本
+  try { if (localStorage.getItem('meibai_nav_collapsed') === '1') { $('.app').classList.add('nav-collapsed'); const b = $('#navToggle'); if (b) b.textContent = '»'; } } catch (e) {}
+  initPWA();
+  checkAccess(); maybeShowInstall();
+}
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
